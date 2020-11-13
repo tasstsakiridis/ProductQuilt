@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>50.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Product Quilt</masterLabel>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__Tab</target>
+        <target>lightningCommunity__Default</target>
+        <target>lightningCommunity__Page</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__RecordPage">
+            <property name="type" type="String" label="Object" datasource="Quilt,List" default="Quilt"/>
+            <property name="linkToObject" label="Link to Object" type="String" description="API Name of Object to link the selected products to" default='Activity_Product__c' />
+            <property name="linkToObjectFieldName" label="Link to Object Field Name" type="String" description="API Name of the Parent Field on the Link to Object" default='Activity__c'/>
+            <property name="linkToObjectProductFieldName" label="Link to Object Product fieldname" type="String" description="API name of the Product field on the Link to Object" default="Product__c" />
+            <property name="productUsedFor" label="Product Used For" type="String" description="Only load products where Used For is" datasource="Account Survey,Promotion,Order,CPT,Fee,Incentive,Sample Order,Sample Order - E-Premise,Sample Order - UK,High Value,Employee Request"/>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

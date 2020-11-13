@@ -1,0 +1,17 @@
+.content {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.card-body {
+    background-color: #fff;
+}
+.background-white {
+    background-color: #fff;
+}
+c-product-tile {
+    min-height: 100px;
+    min-width: 200px;  
+    margin: 0.25rem;  
+    flex: 1;
+}
