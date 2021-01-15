@@ -4,48 +4,134 @@
     </template>
     <template if:true={isQuilt}>
         <lightning-layout>
-            <lightning-layout-item size="9">
+            <lightning-layout-item size="8">
                 <div class="content">
                     <template if:true={products}>
+                        <template for:each={products} for:item="product">
+                            
+                            <c-selectable-tile key={product.Id}
+                                            class={product.Id}
+                                            obj-record={product}
+                                            obj-record-id={product.Id}
+                                            obj-record-api-name="Product__c"
+                                            image-field-name="Image_Name__c"
+                                            image-position="left"
+                                            title={product.Name}
+                                            input-field-1-name={quantityFieldName}
+                                            input-field-1-label={quantityFieldLabel}
+                                            input-field-1-type={number}
+                                            input-field-2-name={priceFieldName}
+                                            input-field-2-label={priceFieldLabel}
+                                            input-field-2-type={currency}
+                                            selected-event-name="selected"
+                                            de-selected-event-name="deselected"
+                                            onselected={handleProductSelected}
+                                            ondeselected={handleProductDeselected}
+                                            onvalueupdated={handleProductInputUpdate}>
+                            </c-selectable-tile>
+                        </template>
+                        <!--
                         <template for:each={products} for:item="product">
                             <c-product-tile key={product.Id} 
                                             product={product}
                                             keep-selection="true"
                                             class={product.Id}
-                                            onselected={handleProductSelected}>
+                                            quantity-field-name={quantityFieldName}
+                                            quantity-field-label={quantityFieldLabel}
+                                            price-field-name={priceFieldName}
+                                            price-field-label={priceFieldLabel}
+                                            onselected={handleProductSelected}
+                                            onqtyupdated={handleProductQtyUpdated}
+                                            onpriceupdated={handleProductPriceUpdated}>
                             </c-product-tile>
-                        </template>    
+                        </template>   
+                    --> 
                     </template>
                 </div>
             </lightning-layout-item>
-            <lightning-layout-item size="3" padding="around-small" class="slds-border_left">
-                <lightning-card variant="Narrow" title="Selected">
-                    <template if:true={selectedProducts}>
-                        <lightning-button label="Clear list" 
-                                        slot="actions"
-                                        onclick={clearSelectedProducts}>
-                        </lightning-button>
-                    </template>
-                    <template if:true={selectedProductRows}>
-                        <lightning-button label="Remove products"
-                                        slot="actions"
-                                        onclick={removeSelectedProducts}>
-                        </lightning-button>
-                    </template>
-
-                    <div style="height: 400px; overflow-y: scroll;">
-                        <lightning-datatable key-field="Product__c"
-                                             columns={selectedProductsColumns}
-                                             data={selectedProducts}
-                                             onrowselection={handleSelectedProductRowSelection}>
-                        </lightning-datatable>
+            <lightning-layout-item size="4" padding="around-small" class="slds-border_left">
+                <template if:true={showingFilters}>
+                    <div>
+                        <c-bf-filter-list filter-configs={filterConfigs} 
+                                          title={labels.filters.label}
+                                          refresh-on-selection="false"
+                                          onfilter={applyFilters}>
+                        </c-bf-filter-list>
+                        <!--
+                        <lightning-input type="toggle"
+                                         label="Show selected products"
+                                         message-toggle-active="yes"
+                                         message-toggle-inactive="no"
+                                         name="selectedProductsToggle"
+                                         value={f_ShowSelectedProducts}
+                                         class="slds-m-bottom_small"
+                                         onchange={handleShowSelectedProductsToggle}>
+                        </lightning-input>
+                        <lightning-input type="search"
+                                         label="Name"
+                                         value={f_ProductName}
+                                         class="slds-m-bottom_small"
+                                         onchange={handleProductNameFilterChange}>
+                        </lightning-input>
+                        <lightning-dual-listbox name="brands"
+                                                label="Brands"
+                                                source-label="Available"
+                                                selected-label="Selected"
+                                                options={f_BrandOptions}
+                                                value={f_Brands}
+                                                class="slds-m-bottom_small"
+                                                onchange={handleBrandFilterChange}>
+                        </lightning-dual-listbox>
+                        <lightning-dual-listbox label="Unit Size"
+                                                source-label="Available"
+                                                selected-label="Selected"
+                                                options={f_UnitSizeOptions}
+                                                value={f_UnitSizes}
+                                                class="slds-m-bottom_small"
+                                                onchange={handleUnitSizeFilterChange}>
+                        </lightning-dual-listbox>
+                    -->
                     </div>
+                </template>
+                <template if:false={showingFilters}>
+                    <lightning-card variant="Narrow">
+                        <lightning-button-group slot="actions">
+                            <lightning-button-icon icon-name="utility:filterList" 
+                                                    alternative-text="Filters" 
+                                                    class="slds-m-right_x-small"
+                                                    onclick={showFilters}>
+                            </lightning-button-icon>
+                            <template if:true={selectedProducts}>
+                                <lightning-button label="Clear list" 
+                                                slot="actions"
+                                                onclick={clearSelectedProducts}>
+                                </lightning-button>
+                            </template>
+                            <template if:true={hasSelectedRows}>
+                                <lightning-button label="Remove products"
+                                                slot="actions"
+                                                onclick={removeSelectedProducts}>
+                                </lightning-button>
+                            </template>    
+                        </lightning-button-group>
 
-                    <lightning-button label="Link Products" 
-                                      slot="footer"
-                                      onclick={linkProducts}>
-                    </lightning-button>
-                </lightning-card>
+
+                        <div style="height: 400px; overflow-y: scroll;">
+                            <lightning-datatable key-field="Product__c"
+                                                columns={selectedProductsColumns}
+                                                data={selectedProducts}
+                                                column-widths-mode="auto"
+                                                suppress-bottom-bar>
+                            </lightning-datatable>
+                        </div>
+
+                        <lightning-button-group slot="footer">
+                            <lightning-button label="Link Products" 
+                                                onclick={linkSelectedProducts}>
+                            </lightning-button>                
+                        </lightning-button-group>
+                    </lightning-card>
+                </template>
             </lightning-layout-item>
         </lightning-layout>    
     </template>

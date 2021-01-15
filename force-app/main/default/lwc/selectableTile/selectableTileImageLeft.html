@@ -1,0 +1,52 @@
+<template>
+    <div class={tileClass}>
+        <a onclick={handleClick}>
+            <div class="content slds-align_absolute-center">
+                <lightning-layout multiple-rows="true">
+                    <lightning-layout-item size="12">
+                        <template if:true={hasInputFields}>
+                            <lightning-button variant="base" label={selectButtonLabel} class="slds-float_right" onclick={handleSelectButtonClick}></lightning-button>
+                        </template>
+                        <lightning-layout vertical-align="center">
+                            <template if:true={pictureUrl}>
+                                <lightning-layout-item size="4" flexibility="auto" class="slds-align_absolute-center">
+                                    <img src={pictureUrl} class="product" alt="Product picture" />
+                                </lightning-layout-item>                        
+                            </template>
+                            <lightning-layout-item size={titleDivSize} flexibility="auto,no-shrink" padding="horizontal-small">
+                                <h3 class="title slds-m-bottom_x-small" style="word-wrap:break-word;">{title}</h3>
+                                <p>{textLine1}</p>
+                            </lightning-layout-item>                    
+                        </lightning-layout>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="12">
+                        <template if:true={hasInputFields}>
+                            <div class="slds-grid">
+                                <template if:true={inputField1Name}>
+                                    <div class="slds-col slds-m-right_x-small">
+                                        <c-bf-input field-name={inputField1Name}
+                                                    field-label={inputField1Label}
+                                                    field-type={inputField1Type}
+                                                    field-value={inputField1Value}
+                                                    onvalueupdated={handleFieldValueUpdated}>
+                                        </c-bf-input>
+                                    </div>
+                                </template>
+                                <template if:true={inputField2Name}>
+                                    <div class="slds-col slds-m-right_x-small">
+                                        <c-bf-input field-name={inputField2Name}
+                                                    field-label={inputField2Label}
+                                                    field-type={inputField2Type}
+                                                    field-value={inputField2Value}
+                                                    onvalueupdated={handleFieldValueUpdated}>
+                                        </c-bf-input>                                        
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </lightning-layout-item>
+                </lightning-layout>
+            </div>
+        </a>
+    </div>
+</template>

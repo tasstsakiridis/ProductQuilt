@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>ClearList</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ClearList</shortDescription>
+        <value>Clear list</value>
+    </labels>
+    <labels>
+        <fullName>Link</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Link</shortDescription>
+        <value>Link</value>
+    </labels>
+</CustomLabels>

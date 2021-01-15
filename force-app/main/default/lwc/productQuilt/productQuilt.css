@@ -15,3 +15,9 @@ c-product-tile {
     margin: 0.25rem;  
     flex: 1;
 }
+c-selectable-tile {
+    min-height: 100px;
+    min-width: 200px;  
+    margin: 0.25rem;  
+    flex: 1;
+}

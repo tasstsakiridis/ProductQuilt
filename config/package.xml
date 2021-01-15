@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <name>ApexClass</name>
+        <members>ProductQuilt_Controller</members>
+    </types>
+    <types>
+        <name>LightningComponentBundle</name>
+        <members>bfInput</members>
+        <members>lookup</members>
+        <members>productQuilt</members>
+        <members>selectableTile</members>
+        <members>selectableTileWithInput</members>
+    </types>
+    <types>
+        <name>CustomField</name>
+        <members>Activity_Product__c.Product_Name__c</members>
+        <members>Activity_Product__c.Quantity__c</members>
+        <members>Activity_Product__c.Price__c</members>
+    </types>
+    <version>47.0</version>
+</Package>

@@ -1,0 +1,14 @@
+<template>
+    <template if:true={isList}>
+        
+    </template>
+    <template if:false={isList}>
+        <lightning-input name={fieldName} class={fieldName}
+                        label={fieldLabel}
+                        value={fieldValue}
+                        type={fieldType}
+                        placeholder={placeholderText}
+                        onchange={handleInputChange}>
+        </lightning-input>                        
+    </template>
+</template>

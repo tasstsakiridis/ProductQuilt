@@ -1,0 +1,47 @@
+<template>
+    <div class={tileClass}>
+        <a onclick={handleClick}>
+            <div class="content">
+                <lightning-layout multiple-rows="true">
+                    <lightning-layout-item size="12">
+                        <lightning-layout vertical-align="center">
+                            <template if:true={pictureUrl}>
+                                <lightning-layout-item size="4">
+                                    <img src={pictureUrl} class="product slds-m-around_x-small" alt="Product picture" />
+                                </lightning-layout-item>
+                            </template>                
+                            <lightning-layout-item size={titleSize}>                                
+                                <p class="title slds-align_absolute-center slds-m-bottom_x-small" style="word-wrap:normal;">{title}</p>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="12">
+                        <template if:true={showQtyOrPriceFields}>
+                            <div class="slds-grid slds-border_top">
+                                <template if:true={quantityFieldName}>
+                                    <div class="slds-col slds-m-right_x-small">
+                                        <lightning-input type="number" 
+                                                        step="1"
+                                                        label={quantityFieldLabel} 
+                                                        value={qtyFieldValue}
+                                                        onchange={handleQtyFieldValueChange}>
+                                        </lightning-input>
+                                    </div>
+                                </template>
+                                <template if:true={priceFieldName}>
+                                    <lightning-input type="number" 
+                                                    formatter="currency"
+                                                    step="0.01"
+                                                    label={priceFieldLabel} 
+                                                    value={priceFieldValue}
+                                                    onchange={handlePriceFieldValueChange}>
+                                    </lightning-input>
+                                </template>
+                            </div>
+                        </template>
+                    </lightning-layout-item>
+                </lightning-layout>
+            </div>
+        </a>
+    </div>
+</template>
