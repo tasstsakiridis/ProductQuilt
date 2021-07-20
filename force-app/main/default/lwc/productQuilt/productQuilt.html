@@ -19,10 +19,10 @@
                                             title={product.Name}
                                             input-field-1-name={quantityFieldName}
                                             input-field-1-label={quantityFieldLabel}
-                                            input-field-1-type={number}
+                                            input-field-1-type="number"
                                             input-field-2-name={priceFieldName}
                                             input-field-2-label={priceFieldLabel}
-                                            input-field-2-type={currency}
+                                            input-field-2-type="currency"
                                             selected-event-name="selected"
                                             de-selected-event-name="deselected"
                                             onselected={handleProductSelected}
@@ -96,23 +96,24 @@
                 <template if:false={showingFilters}>
                     <lightning-card variant="Narrow">
                         <lightning-button-group slot="actions">
-                            <lightning-button-icon icon-name="utility:filterList" 
-                                                    alternative-text="Filters" 
-                                                    class="slds-m-right_x-small"
-                                                    onclick={showFilters}>
-                            </lightning-button-icon>
                             <template if:true={selectedProducts}>
-                                <lightning-button label="Clear list" 
-                                                slot="actions"
+                                <lightning-button label={labels.save.label}
+                                                  onclick={linkSelectedProducts}>
+                                </lightning-button>                
+                                <lightning-button label={labels.clearList.label} 
                                                 onclick={clearSelectedProducts}>
                                 </lightning-button>
                             </template>
                             <template if:true={hasSelectedRows}>
-                                <lightning-button label="Remove products"
-                                                slot="actions"
+                                <lightning-button label={labels.removeProducts.label}
                                                 onclick={removeSelectedProducts}>
                                 </lightning-button>
                             </template>    
+                            <lightning-button-icon icon-name="utility:filterList" 
+                                                    alternative-text="Filters" 
+                                                    class="slds-m-left_x-small"
+                                                    onclick={showFilters}>
+                            </lightning-button-icon>
                         </lightning-button-group>
 
 
@@ -125,11 +126,13 @@
                             </lightning-datatable>
                         </div>
 
+                        <!--
                         <lightning-button-group slot="footer">
                             <lightning-button label="Link Products" 
                                                 onclick={linkSelectedProducts}>
                             </lightning-button>                
                         </lightning-button-group>
+                    -->
                     </lightning-card>
                 </template>
             </lightning-layout-item>

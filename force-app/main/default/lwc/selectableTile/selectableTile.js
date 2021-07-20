@@ -84,6 +84,8 @@ export default class SelectableTile extends LightningElement {
     @api 
     deselect() {
         this.isSelected = false;
+        this.inputField1Value = undefined;
+        this.inputField2Value = undefined;
     }
 
     @api 
@@ -221,10 +223,17 @@ export default class SelectableTile extends LightningElement {
             this.inputField2Value = event.detail.value;
         }
 
+        console.log('[selectableTile.handleFieldValueUpdatd] isSelected', this.isSelected);
         if (this.isSelected) {
-            this.template.dispatchEvent(new CustomEvent('valueupdated'), {
-                detail: { id: this.objRecordId, fieldName: event.detail.fieldName, fieldValue: event.detail.fieldValue }
-            });    
+            const ev = new CustomEvent('valueupdated', {
+                detail: {
+                    id: this.objRecordId,
+                    fieldName: event.detail.fieldName,
+                    fieldValue: event.detail.value
+                }
+            });
+            console.log('[selectabletile.handleFieldValueUpdated] event', JSON.parse(JSON.stringify(ev)));
+            this.dispatchEvent(ev);    
         }
     }
 

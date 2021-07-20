@@ -1,3 +1,6 @@
+/**
+* Test Class:  ProductQuilt_Controller_Test
+*/
 public with sharing class ProductQuilt_Controller {
     @AuraEnabled(cacheable=true)
     public static Map<String, Object> getProducts(String recordId, String linkToObject, String linkToObjectFieldName, String linkToObjectProductFieldName, String usedFor, String linkToObjectQtyFieldName, String linkToObjectPriceFieldName){
@@ -10,6 +13,7 @@ public with sharing class ProductQuilt_Controller {
         String marketName = 'Australia';
         String marketId;
         String query;
+        String channel;
         Map<String, Object> result = new Map<String, Object>();
 
         try {
@@ -21,9 +25,10 @@ public with sharing class ProductQuilt_Controller {
                 Market__c market = [SELECT Id FROM Market__c WHERE Name =:marketName LIMIT 1];
                 marketId = market.Id;
             } else {
-                query = 'SELECT Market__c FROM ' + dsr.name + ' WHERE Id=:recordId';
+                query = 'SELECT Market__c, Channel__c FROM ' + dsr.name + ' WHERE Id=:recordId';
                 List<SObject> theRecord = Database.query(query);
                 marketId = String.valueOf(theRecord.get(0).get('Market__c'));
+                channel = String.valueOf(theRecord.get(0).get('Channel__c'));
             }            
 
             Map<String, Schema.RecordTypeInfo> rtList = Product__c.SObjectType.getDescribe().getRecordTypeInfosByName();
@@ -36,6 +41,9 @@ public with sharing class ProductQuilt_Controller {
             query += ' AND RecordTypeId=:rtId';
             if (String.isNotEmpty(usedFor)) {
                 query += ' AND Used_For__c INCLUDES (:usedFor)';
+            }
+            if (String.isNotEmpty(channel)) {
+                query += ' AND (Channel__c =:channel OR Channel__c=\'Both\')';
             }
             query += ' ORDER BY Sort_Order__c, Name';
             System.debug('product query: ' + query);
@@ -92,20 +100,30 @@ public with sharing class ProductQuilt_Controller {
     public static Map<String, Object> linkProducts(String recordId, String linkToObject, String linkToObjectFieldName, String linkToObjectProductFieldName, String linkToObjectQtyFieldName, String linkToObjectPriceFieldName, List<Map<String, Object>> selectedProducts){
         Map<String, Object> result = new Map<String, Object>();
         try {
+            System.debug('recordId: ' + recordId);
+            System.debug('linkToObject: ' + linkToObject);
+            System.debug('linkToObjectFieldName: ' + linkToObjectFieldName);
+            System.debug('linkToObjectProductFieldName: ' + linkToObjectProductFieldName);
+            System.debug('linkToObjectQuantityFieldName: ' + linkToObjectQtyFieldName);
+            System.debug('linkToObjectPriceFieldName: ' + linkToObjectPriceFieldName);
+            System.debug('selectedProducts: ' + selectedProducts);
             if (!selectedProducts.isEmpty()) {
                 List<SObject> rows = new List<SObject>();
                 for(Map<String,Object> o : selectedProducts) {
+                    System.debug('product row: ' + o);
                     String linkedRowId = String.valueOf(o.get('id'));
                     String productId = String.valueOf(o.get('product'));
                     SObject newRow = Schema.getGlobalDescribe().get(linkToObject).newSObject();
                     if (String.isEmpty(linkedRowId)) {
                         newRow.put(linkToObjectFieldName, recordId);
-                        newRow.put(linkToObjectProductFieldName, productId);
-
                     } else {
                         newRow.put('Id', linkedRowId);
                     }
 
+                    newRow.put(linkToObjectProductFieldName, productId);
+
+                    System.debug('qty: ' + o.get('qty'));
+                    System.debug('price: ' + o.get('price'));
                     if (String.isNotEmpty(linkToObjectQtyFieldName)) {
                         newRow.put(linkToObjectQtyFieldName, Double.valueOf(o.get('qty')));
                     }
@@ -125,7 +143,34 @@ public with sharing class ProductQuilt_Controller {
             }
         } catch (Exception ex) {
             result.put('status', 'ERROR');
-            result.put('error', ex.getMessage());
+            result.put('message', ex.getMessage());
+        }
+
+        return result;
+    }
+
+    @AuraEnabled 
+    public static Map<String, Object> deleteLinkedProducts(String linkToObject, List<String> productsToDelete) {
+        Map<String, Object> result = new Map<String, Object>();
+
+        try {
+            if (productsToDelete == null || productsToDelete.size() == 0) {
+                throw new BF_Exception('No products selected to remove from activity');
+            }
+
+            String soql = 'SELECT Id FROM ' + linkToObject + ' WHERE Id =:productsToDelete';
+            List<SObject> rows = Database.query(soql);
+            Integer numberOfRows = rows.size();
+            System.debug('# of rows: ' + numberOfRows);
+
+            if (rows != null && rows.size() > 0) {
+                delete rows;
+            }
+            result.put('status', 'SUCCESS');
+            result.put('message', String.valueOf(numberOfRows) + ' product(s) removed from the activity');
+        }catch(Exception ex) {
+            result.put('status', 'ERROR');
+            result.put('message', ex.getMessage());
         }
 
         return result;

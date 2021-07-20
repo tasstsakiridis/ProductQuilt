@@ -3,6 +3,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 import getProducts from '@salesforce/apex/ProductQuilt_Controller.getProducts';
 import linkProducts from '@salesforce/apex/ProductQuilt_Controller.linkProducts';
+import deleteLinkedProducts from '@salesforce/apex/ProductQuilt_Controller.deleteLinkedProducts';
 
 import LABEL_ADD from '@salesforce/label/c.Add';
 import LABEL_CLEAR_LIST from '@salesforce/label/c.ClearList';
@@ -12,6 +13,7 @@ import LABEL_LINK from '@salesforce/label/c.Link';
 import LABEL_PRODUCT from '@salesforce/label/c.Product';
 import LABEL_PRODUCTS from '@salesforce/label/c.Products';
 import LABEL_REMOVE from '@salesforce/label/c.Remove';
+import LABEL_SAVE from '@salesforce/label/c.Save';
 import LABEL_SUCCESS from '@salesforce/label/c.Success';
 
 const selectedProductsColumns = [
@@ -25,7 +27,8 @@ export default class ProductQuilt extends LightningElement {
         filters:        { label: LABEL_FILTERS },
         linkProducts:   { label: `${LABEL_LINK} ${LABEL_PRODUCTS}` },
         product:        { label: LABEL_PRODUCT, labelPlural: LABEL_PRODUCTS },
-        removeProducts: { label: `${LABEL_REMOVE} ${LABEL_PRODUCTS}` }
+        removeProducts: { label: `${LABEL_REMOVE} ${LABEL_PRODUCTS}` },
+        save:           { label: LABEL_SAVE }
     };
 
     @api 
@@ -70,6 +73,7 @@ export default class ProductQuilt extends LightningElement {
     isWorking = false;
     products = [];
     allProducts = [];
+    rowsToDelete = [];
     selectedProducts;
     selectedProductRows;
     linkedRows = new Map();
@@ -119,6 +123,12 @@ export default class ProductQuilt extends LightningElement {
                 this.template.querySelectorAll("c-selectable-tile."+key)
             ).forEach(tile => {
                 console.log('[loadProducts] tile', tile);
+                if (this.quantityFieldName && value.qty != undefined) {
+                    tile.updateField(this.quantityFieldName, value.qty);
+                }
+                if (this.priceFieldName && value.price != undefined) {
+                    tile.updateField(this.priceFieldName, value.price);
+                }
                 tile.select();
             });    
         });
@@ -198,12 +208,14 @@ export default class ProductQuilt extends LightningElement {
     handleProductSelected(event) {
         console.log('[productQuilt.handleProductSelected] event.detail', JSON.parse(JSON.stringify(event.detail)));
         if (this.linkedRows.has(event.detail.id)) {
+            this.isWorking = true;
             const row = this.linkedRows.get(event.detail.id);
             if (row.id != null && row.id != '') {
                 this.rowsToDelete.push(row.id);                    
             }
 
             this.linkedRows.delete(event.detail.id);
+            this.deleteProducts();
         } else {
             const row = { id: null, 
                           product: event.detail.id, 
@@ -216,7 +228,11 @@ export default class ProductQuilt extends LightningElement {
         this.selectedProducts = [...this.linkedRows.values()];
         console.log('[productQuilt.handleProductSelected] selectedProducts', this.selectedProducts);
     }
-    handleProductValueUpdated(event) {
+    handleProductInputUpdate(event) {
+        console.log('[productQuilt.handleProductInputUpdate] event', JSON.parse(JSON.stringify(event.detail)));
+        console.log('[productQuilt.handleProductInputUpdate] linkedRows', this.linkedRows);
+        console.log('[productQuilt.handleProductInputUpdate] quantityFieldName', this.quantityFieldName);
+        console.log('[productQuilt.handleProductInputUpdate] priceFieldName', this.priceFieldName);
         if (this.quantityFieldName == event.detail.fieldName) {
             if (this.linkedRows.has(event.detail.id)) {
                 const row = this.linkedRows.get(event.detail.id);
@@ -230,6 +246,8 @@ export default class ProductQuilt extends LightningElement {
                 this.linkedRows.set(event.detail.id, row);
             }
         }
+        console.log('[productQuilt.handleProductInputUpdate] updated linkedRows', this.linkedRows);
+        this.selectedProducts = [...this.linkedRows.values()];
     }
     handleProductQtyUpdated(event) {
         if (this.linkedRows.has(event.detail.productId)) {
@@ -249,18 +267,31 @@ export default class ProductQuilt extends LightningElement {
     removeSelectedProducts() {
         const self = this;
         try {
-            this.selectedProductRows.forEach(row => {
-                console.log('[productQuilt.removeSelectedProducts] row', row);
-                self.template.querySelector('c-selectable-tile.'+row.Product__c).selectTile(false);
-                const linkedRow = self.linkedRows.get(row.Product__c);
-                if (linkedRow.Id != null && linkedRow.Id != '') {
-                    this.rowsToDelete.push(linkedRow.Id);
+            const datatable = this.template.querySelector('lightning-datatable');
+            if (datatable) {
+                const selectedRows = datatable.getSelectedRows();
+                selectedRows.forEach(row => {
+                    console.log('[productQuilt.removeSelectedProducts] row', row);
+                    Array.from(
+                        this.template.querySelectorAll("c-selectable-tile."+row.product)
+                    ).forEach(tile => {
+                        console.log('[loadProducts] tile', tile);
+                        tile.deselect();
+                    });    
+        
+                    const linkedRow = self.linkedRows.get(row.product);
+                    if (this.linkedRows != null && linkedRow.id != null && linkedRow.id != '') {
+                        this.rowsToDelete.push(linkedRow.id);
+                    }
+                    self.linkedRows.delete(row.product);
+                });
                 }
-                self.linkedRows.delete(row.Product__c);
-            });
+    
 
             this.selectedProducts = [...this.linkedRows.values()];
-            this.selectedProductRows = undefined;
+            if (this.rowsToDelete && this.rowsToDelete.length > 0) {
+                this.deleteProducts();
+            }
         }catch(ex) {
             console.log('[productQuilt.removeSelectedProducts] exception', ex);
         }
@@ -269,27 +300,47 @@ export default class ProductQuilt extends LightningElement {
         this.selectedProductRows = [...this.selectedProducts];
         this.removeSelectedProducts();
     }
+    deleteProducts() {
+        deleteLinkedProducts({
+            linkToObject: this.linkToObject,
+            productsToDelete: this.rowsToDelete
+        }).then(result => {
+            this.rowsToDelete = [];
+            this.isWorking = false;
+            const evt = new ShowToastEvent({
+                title: LABEL_SUCCESS,
+                message: result.message,
+                variant: 'success'
+            });
+            this.dispatchEvent(evt);
 
+        }).catch(error => {
+            console.log('[productQuilt.removeSelectedProducts] error', error);
+            this.isWorking = false;
+        });    
+    }
     linkSelectedProducts() {
         console.log('[linkProducts] linkedRows', JSON.parse(JSON.stringify(this.linkedRows)));
+        console.log('[linkProducts] selectedProducts', this.selectedProducts);
+        this.isWorking = true;
         linkProducts({ recordId: this.recordId, 
                 linkToObject: this.linkToObject, 
                 linkToObjectFieldName: this.linkToObjectFieldName, 
                 linkToObjectProductFieldName: this.linkToObjectProductFieldName,
-                linkToObjectQtyFieldName: this.linkToObjectQtyFieldName,
-                linkToObjectPriceFieldName: this.linkToObjectPriceFieldName,
+                linkToObjectQtyFieldName: this.quantityFieldName,
+                linkToObjectPriceFieldName: this.priceFieldName,
                 selectedProducts: this.selectedProducts,
         }).then(result => {
             console.log('[linkProducts] result', JSON.parse(JSON.stringify(result)));
-            const rows = new Map();
-            result.forEach(r => {
-                rows.set(this.linkToObjectProductFieldName, r);
+            result.rows.forEach(r => {
+                let lr = {...this.linkedRows.get(r[this.linkToObjectProductFieldName])};
+                lr.id = r.Id;                
+                this.linkedRows.set(r[this.linkToObjectProductFieldName], lr);
             });
-
-            this.linkedRows = {...rows};
+            this.isWorking = false;
             const evt = new ShowToastEvent({
                 title: LABEL_SUCCESS,
-                message: 'Selected products linked to the activity',
+                message: 'Updates saved successfully',
                 variant: 'success'
             });
             this.dispatchEvent(evt);
@@ -302,6 +353,7 @@ export default class ProductQuilt extends LightningElement {
                 variant: 'error'
             });
             this.dispatchEvent(evt);
+            this.isWorking = false;
 
         });
     }
