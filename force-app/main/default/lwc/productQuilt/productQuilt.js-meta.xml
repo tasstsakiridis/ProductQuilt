@@ -13,6 +13,7 @@
     <targetConfigs>
         <targetConfig targets="lightning__AppPage,lightning__RecordPage">
             <property name="type" type="String" label="Object" datasource="Quilt,List" default="Quilt"/>
+            <property name="showFilters" type="Boolean" label="Show Brand filter" default="false" />
             <property name="linkToObject" label="Link to Object" type="String" description="API Name of Object to link the selected products to" default='Activity_Product__c' />
             <property name="linkToObjectFieldName" label="Link to Object Field Name" type="String" description="API Name of the Parent Field on the Link to Object" default='Activity__c'/>
             <property name="linkToObjectProductFieldName" label="Link to Object Product fieldname" type="String" description="API name of the Product field on the Link to Object" default="Product__c" />
