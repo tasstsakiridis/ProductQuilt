@@ -1,5 +1,7 @@
 import { LightningElement, api, track, wire } from 'lwc';
+import { CurrentPageReference, NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { registerListener, unregisterAllListeners } from 'c/pubsub';
 
 import getProducts from '@salesforce/apex/ProductQuilt_Controller.getProducts';
 import linkProducts from '@salesforce/apex/ProductQuilt_Controller.linkProducts';
@@ -61,6 +63,9 @@ export default class ProductQuilt extends LightningElement {
     @api 
     priceFieldLabel;
 
+    @api 
+    showFilters;
+
     get isQuilt() {
         return this.type == 'Quilt';
     }
@@ -68,6 +73,13 @@ export default class ProductQuilt extends LightningElement {
         return this.type == 'List';
     }
     
+    pageRef;
+    @wire(CurrentPageReference)
+    setCurrentPageReference(currentPageReference) {
+        this.pageRef = currentPageReference;
+        this.currentPageReference = currentPageReference;
+    }
+
     selectedProductsColumns = selectedProductsColumns;
 
     isWorking = false;
@@ -78,11 +90,9 @@ export default class ProductQuilt extends LightningElement {
     selectedProductRows;
     linkedRows = new Map();
     brands;
+    brandsSelected = '';
     unitSizes;
     productsLoaded = false;
-
-    @track
-    showingFilters = false;
 
     get hasSelectedRows() {
         const datatable = this.template.querySelector('lightning-datatable');
@@ -100,7 +110,17 @@ export default class ProductQuilt extends LightningElement {
         { label: 'Unit Sizes', name: 'unitsize', type: 'list', options: this.unitSizes, multiple: true }
     ];
     
+    /** 
+     * Constructor
+     */
+
+    disconnectedCallback() {
+        unregisterAllListeners(this);
+    }
+
     connectedCallback() {
+        registerListener('brandsSelected', this.handleBrandsSelected, this);
+
         if (this.quantityFieldName != undefined) {
             this.selectedProductsColumns.push({label: this.quantityFieldLabel, fieldName: 'qty', type: 'number', editable: false, initialWidth: 125});
         }
@@ -203,6 +223,27 @@ export default class ProductQuilt extends LightningElement {
             this.linkedRows.clear();
             this.selectedProducts = [];
         })
+    }
+
+    toggleFilterView() {
+        this.showFilters = !this.showFilters;
+    }
+    handleBrandsSelected(brandsSelected) {
+        console.log('[productQuilt.handleBrandsSelected] brands', brandsSelected);
+        console.log('[productQuilt.handleBrandsSelected] wiredProducts', this.allProducts);
+        try {
+            if (brandsSelected.length == 0) {
+                this.brandsSelected = '';
+                this.products = [...this.allProducts];
+            } else {
+                this.brandsSelected = brandsSelected.join(',');
+                this.products = this.allProducts.filter(p => brandsSelected.indexOf(p.Brand__c) > -1);
+            }
+            console.log('[productQuilt.handleBrandsSelected] selectedproducts', this.products);
+        }catch(ex) {
+            console.log('[productQuilt.handleBrandsSelected] exception', ex);
+        }
+        
     }
 
     handleProductSelected(event) {
@@ -358,12 +399,6 @@ export default class ProductQuilt extends LightningElement {
         });
     }
     
-    showFilters() {
-        this.showingFilters = true;
-    }
-    hideFilters() {
-        this.showingFilters = false;
-    }
 
     applyFilters(event) {
         const filters = event.detail.filters;
