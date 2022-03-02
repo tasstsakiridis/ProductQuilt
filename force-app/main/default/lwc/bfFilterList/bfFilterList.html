@@ -1,0 +1,40 @@
+<template>
+    <lightning-card title={title}>
+        <lightning-button-group slot="actions">
+            <lightning-button-icon icon-name="utility:add"
+                                    alternative-text="Add filter"
+                                    onclick={addFilter}>
+            </lightning-button-icon>
+            <template if:true={filters}>
+                <lightning-button label={labels.clear.label}
+                                    class="slds-m-left_x-small"
+                                    onclick={clearFilters}>
+                </lightning-button>
+            </template>
+        </lightning-button-group>
+
+        <lightning-button-group slot="footer">
+            <lightning-button label={labels.cancel.label}
+                                class="slds-m-right_x-small"
+                                onclick={cancelChanges}>
+            </lightning-button>
+            <lightning-button label={labels.apply.label}
+                                onclick={applyFilters}>
+            </lightning-button>
+        </lightning-button-group>
+
+        <div>
+            <template if:true={filters}>
+                <template for:each={filters} for:item="filter">
+                    <c-bf-filter key={filter.key}
+                                 filter={filter}
+                                 filter-configs={filterConfigs}
+                                 class="bf-filter"
+                                 refresh-on-selection={refreshOnSelection}
+                                 onremove={removeFilterFromList}>
+                    </c-bf-filter>
+                </template>
+            </template>        
+        </div>
+    </lightning-card>
+</template>

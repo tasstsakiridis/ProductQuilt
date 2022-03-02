@@ -7,8 +7,7 @@
             <lightning-layout-item size="8">
                 <div class="content">
                     <template if:true={products}>
-                        <template for:each={products} for:item="product">
-                            
+                        <template for:each={products} for:item="product">                            
                             <c-selectable-tile key={product.Id}
                                             class={product.Id}
                                             obj-record={product}
@@ -50,14 +49,14 @@
                 </div>
             </lightning-layout-item>
             <lightning-layout-item size="4" padding="around-small" class="slds-border_left">
-                <template if:true={showingFilters}>
+                        <!--
+                <template if:true={showFilters}>
                     <div>
                         <c-bf-filter-list filter-configs={filterConfigs} 
                                           title={labels.filters.label}
                                           refresh-on-selection="false"
                                           onfilter={applyFilters}>
                         </c-bf-filter-list>
-                        <!--
                         <lightning-input type="toggle"
                                          label="Show selected products"
                                          message-toggle-active="yes"
@@ -90,33 +89,44 @@
                                                 class="slds-m-bottom_small"
                                                 onchange={handleUnitSizeFilterChange}>
                         </lightning-dual-listbox>
-                    -->
                     </div>
                 </template>
-                <template if:false={showingFilters}>
-                    <lightning-card variant="Narrow">
-                        <lightning-button-group slot="actions">
-                            <template if:true={selectedProducts}>
-                                <lightning-button label={labels.save.label}
-                                                  onclick={linkSelectedProducts}>
-                                </lightning-button>                
-                                <lightning-button label={labels.clearList.label} 
-                                                onclick={clearSelectedProducts}>
-                                </lightning-button>
-                            </template>
-                            <template if:true={hasSelectedRows}>
-                                <lightning-button label={labels.removeProducts.label}
-                                                onclick={removeSelectedProducts}>
-                                </lightning-button>
-                            </template>    
-                            <lightning-button-icon icon-name="utility:filterList" 
-                                                    alternative-text="Filters" 
-                                                    class="slds-m-left_x-small"
-                                                    onclick={showFilters}>
-                            </lightning-button-icon>
-                        </lightning-button-group>
+                    -->
+                <lightning-card variant="Narrow">
+                    <lightning-button-group slot="actions">
+                        <lightning-button-icon-stateful icon-name="utility:filterList" 
+                                                selected={showFilters}
+                                                alternative-text="Filters"
+                                                onclick={toggleFilterView}>
+                        </lightning-button-icon-stateful>
+                        <!--
+                        <template if:true={selectedProducts}>
+                            <lightning-button label={labels.save.label}
+                                                onclick={linkSelectedProducts}>
+                            </lightning-button>                
+                            <lightning-button label={labels.clearList.label} 
+                                            onclick={clearSelectedProducts}>
+                            </lightning-button>
+                        </template>
+                        <template if:true={hasSelectedRows}>
+                            <lightning-button label={labels.removeProducts.label}
+                                            onclick={removeSelectedProducts}>
+                            </lightning-button>
+                        </template>    
+                        <lightning-button-icon icon-name="utility:filterList" 
+                                                alternative-text="Filters" 
+                                                class="slds-m-left_x-small"
+                                                onclick={showFilters}>
+                        </lightning-button-icon>
+                    -->
+                    </lightning-button-group>
 
-
+                    <template if:true={showFilters}>
+                        <div style="height: 500px; overflow-y: scroll;">
+                            <c-brand-filter></c-brand-filter>
+                        </div>
+                    </template>
+                    <template if:false={showFilters}>
                         <div style="height: 400px; overflow-y: scroll;">
                             <lightning-datatable key-field="Product__c"
                                                 columns={selectedProductsColumns}
@@ -125,16 +135,17 @@
                                                 suppress-bottom-bar>
                             </lightning-datatable>
                         </div>
+                    </template>
 
-                        <!--
-                        <lightning-button-group slot="footer">
-                            <lightning-button label="Link Products" 
-                                                onclick={linkSelectedProducts}>
-                            </lightning-button>                
-                        </lightning-button-group>
-                    -->
-                    </lightning-card>
-                </template>
+
+                    <!--
+                    <lightning-button-group slot="footer">
+                        <lightning-button label="Link Products" 
+                                            onclick={linkSelectedProducts}>
+                        </lightning-button>                
+                    </lightning-button-group>
+                -->
+                </lightning-card>
             </lightning-layout-item>
         </lightning-layout>    
     </template>
