@@ -3,18 +3,30 @@
 */
 public with sharing class ProductQuilt_Controller {
     @AuraEnabled(cacheable=true)
-    public static Map<String, Object> getProducts(String recordId, String linkToObject, String linkToObjectFieldName, String linkToObjectProductFieldName, String usedFor, String linkToObjectQtyFieldName, String linkToObjectPriceFieldName){
+    public static Map<String, Object> getProducts(String recordId, String linkToObject, String linkToObjectFieldName, String linkToObjectProductFieldName, String linkToObjectQtyFieldName, String linkToObjectPriceFieldName, String usedFor, Boolean includeDryGoods){
         Id theId = Id.valueOf(recordId);
         Schema.SObjectType typeOfObj = theId.getSobjectType();
         Schema.DescribeSObjectResult dsr = typeOfObj.getDescribe();
         Map<String, Schema.SObjectField> fields = dsr.fields.getMap();
         Boolean hasMarketField = fields.containsKey('Market__c');
 
+        if (includeDryGoods == null) { includeDryGoods = false; }
+
         String marketName = 'Australia';
         String marketId;
         String query;
-        String channel;
+        String channel = '';
         Map<String, Object> result = new Map<String, Object>();
+
+        System.debug('[getProducts] recordId: ' + recordId);
+        System.debug('[getProducts] linkToObject: ' + linkToObject);
+        System.debug('[getProducts] linkToObjectFieldName: ' + linkToObjectFieldName);
+        System.debug('[getProducts] linkToObjectProductFieldName: ' + linkToObjectProductFieldName);
+        System.debug('[getProducts] linkToObjectQtyFieldName: ' + linkToObjectQtyFieldName);
+        System.debug('[getProducts] linkToObjectPriceFieldName: ' + linkToObjectPriceFieldName);
+        System.debug('[getProducts] usedFor: ' + usedFor);
+        System.debug('[getProducts] includeDryGoods: ' + includeDryGoods);
+        System.debug('[getProducts] hasMarketField: ' + hasMarketField);
 
         try {
             if (String.isEmpty(recordId) || hasMarketField == false) {
@@ -29,16 +41,22 @@ public with sharing class ProductQuilt_Controller {
                 List<SObject> theRecord = Database.query(query);
                 marketId = String.valueOf(theRecord.get(0).get('Market__c'));
                 channel = String.valueOf(theRecord.get(0).get('Channel__c'));
-            }            
+            } 
+            System.debug('[getProducts] marketId: ' + marketId + ', marketName: ' + marketName); 
+            System.debug('[getProducts] channel: ' + channel);          
 
             Map<String, Schema.RecordTypeInfo> rtList = Product__c.SObjectType.getDescribe().getRecordTypeInfosByName();
-            String rtId = rtList.get('Wet Goods').getRecordTypeId();
+            String rtWetGoods = rtList.get('Wet Goods').getRecordTypeId();
+            System.debug('[getProducts] rtWetGoods: ' + rtWetGoods);
 
-            query = 'SELECT Id, Name, Brand__c, Brand__r.Name, Image_Name__c, Unit_Size__c, Supplier__c, Classification__c';
+            query = 'SELECT Id, Name, Brand__c, Brand__r.Name, Brand__r.Spirit_Type__c, Image_Name__c, Unit_Size__c, Supplier__c, Classification__c,';
+            query += ' Price__c, Wholesale_Price__c, RecordTypeId, RecordType.Name';
             query += ' FROM Product__c ';
             query += ' WHERE Market__c =:marketId';
             query += ' AND IsActive__c=true';
-            query += ' AND RecordTypeId=:rtId';
+            if (!includeDryGoods) {
+                query += ' AND RecordTypeId=:rtWetGoods';
+            }
             if (String.isNotEmpty(usedFor)) {
                 query += ' AND Used_For__c INCLUDES (:usedFor)';
             }
@@ -86,11 +104,12 @@ public with sharing class ProductQuilt_Controller {
                 
             }
 
-
+            result.put('channel', channel);
             result.put('products', products);
             result.put('status', 'SUCCESS');
         }catch(Exception ex) {
             result.put('error', ex.getMessage());
+            System.debug('[getProducts] exception: ' + ex.getMessage());
         }
 
         return result;

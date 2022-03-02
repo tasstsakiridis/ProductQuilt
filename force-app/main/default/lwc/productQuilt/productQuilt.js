@@ -14,9 +14,12 @@ import LABEL_FILTERS from '@salesforce/label/c.Filters';
 import LABEL_LINK from '@salesforce/label/c.Link';
 import LABEL_PRODUCT from '@salesforce/label/c.Product';
 import LABEL_PRODUCTS from '@salesforce/label/c.Products';
+import LABEL_PRODUCT_TYPE from '@salesforce/label/c.Product_Type';
 import LABEL_REMOVE from '@salesforce/label/c.Remove';
 import LABEL_SAVE from '@salesforce/label/c.Save';
 import LABEL_SUCCESS from '@salesforce/label/c.Success';
+import LABEL_SPIRIT_TYPE from '@salesforce/label/c.Spirit_Type';
+import LABEL_UNIT_SIZE from '@salesforce/label/c.Unit_Size';
 
 const selectedProductsColumns = [
     { label: 'Product', fieldName: 'productName', type: 'text', wrapText: true }
@@ -29,8 +32,11 @@ export default class ProductQuilt extends LightningElement {
         filters:        { label: LABEL_FILTERS },
         linkProducts:   { label: `${LABEL_LINK} ${LABEL_PRODUCTS}` },
         product:        { label: LABEL_PRODUCT, labelPlural: LABEL_PRODUCTS },
+        productType:    { label: LABEL_PRODUCT_TYPE },
         removeProducts: { label: `${LABEL_REMOVE} ${LABEL_PRODUCTS}` },
-        save:           { label: LABEL_SAVE }
+        save:           { label: LABEL_SAVE },
+        spiritType:     { label: LABEL_SPIRIT_TYPE },
+        unitSize:       { label: LABEL_UNIT_SIZE }
     };
 
     @api 
@@ -64,7 +70,13 @@ export default class ProductQuilt extends LightningElement {
     priceFieldLabel;
 
     @api 
+    includeDryGoods;
+
+    @api
     showFilters;
+
+    @api 
+    defaultPriceFromProduct;
 
     get isQuilt() {
         return this.type == 'Quilt';
@@ -88,11 +100,20 @@ export default class ProductQuilt extends LightningElement {
     rowsToDelete = [];
     selectedProducts;
     selectedProductRows;
+
+    productTypeOptions;
+    selectedProductTypes = [];
+    spiritTypeOptions;
+    selectedSpiritTypes = [];
+
+    unitSizeOptions = [];
+    selectedUnitSizes = [];
     linkedRows = new Map();
     brands;
     brandsSelected = '';
-    unitSizes;
     productsLoaded = false;
+    showWetGoods = true;
+    showDryGoods = this.includeDryGoods;
 
     get hasSelectedRows() {
         const datatable = this.template.querySelector('lightning-datatable');
@@ -163,37 +184,74 @@ export default class ProductQuilt extends LightningElement {
                          linkToObjectProductFieldName: this.linkToObjectProductFieldName,
                          linkToObjectQtyFieldName: this.quantityFieldName,
                          linkToObjectPriceFieldName: this.priceFieldName,
-                         usedFor: this.productUsedFor })
+                         usedFor: this.productUsedFor,
+                         includeDryGoods: this.includeDryGoods })
         .then(result => {
             console.log('[getProducts] result', result);
-            this.error = undefined;
-            this.products = result.products;
+            console.log('[getProducts] includeDrygoods', this.includeDryGoods);
+            this.error = undefined;            
             this.allProducts = result.products;
+            this.selectedProductTypes = [];
+            this.selectedUnitSizes = [];
+            this.selectedSpiritTypes = [];
+            this.channel = result.channel || '';
             const brands = new Map();
             const unitSizes = new Map();
+            const productTypes = new Map();
+            const spiritTypes = new Map();
+            const productList = [];
             try {
-                if (this.products) {
-                    this.products.forEach(p => {
-                        if (!brands.has(p.Brand__c)) {
+                if (this.allProducts) {
+                    this.allProducts.forEach(p => {
+                        const prod = {...p};
+                        if (this.channel.toLowerCase().startsWith('on')) {
+                            prod.price = p.Price__c || 0;
+                        } else if (this.channel.toLowerCase().startsWith('off')) {
+                            prod.price = p.Wholesale_Price__c || 0;
+                        }
+                        if (p.Brand__c != undefined && !brands.has(p.Brand__c)) {
                             brands.set(p.Brand__c, { label: p.Brand__r.Name, value: p.Brand__c});
                         }
-                        if (!unitSizes.has(p.Unit_Size__c)) {
-                            unitSizes.set(p.Unit_Size__c, { label: p.Unit_Size__c, value: p.Unit_Size__c});
+                        if (p.Unit_Size__c != undefined && !unitSizes.has(p.Unit_Size__c)) {
+                            unitSizes.set(p.Unit_Size__c, { label: p.Unit_Size__c.toString(), value: p.Unit_Size__c.toString()});
                         }
+                        if (!productTypes.has(p.RecordTypeId)) {
+                            productTypes.set(p.RecordTypeId, { label: p.RecordType.Name, value: p.RecordTypeId });
+                            this.selectedProductTypes.push(p.RecordTypeId);
+                        }
+                        if (p.Brand__r != undefined && p.Brand__r.Spirit_Type__c != undefined && !spiritTypes.has(p.Brand__r.Spirit_Type__c)) {
+                            spiritTypes.set(p.Brand__r.Spirit_Type__c, { label: p.Brand__r.Spirit_Type__c, value: p.Brand__r.Spirit_Type__c });
+                        }
+                    
+                        productList.push(prod);
                     });    
                 }
 
+                this.products = [...productList];
+                console.log('[loadProducts] products', this.products);
                 this.brands = [...brands.values()].sort((a,b) => {
                     if (a.label < b.label) { return -1; }
                     if (a.label > b.label) { return 1; }
                     return 0;
                 });
-
-                this.unitSizes = [...unitSizes.values()].sort((a,b) => {
+                this.unitSizeOptions = [...unitSizes.values()].sort((a,b) => {
                     if (a.label < b.label) { return -1; }
                     if (a.label > b.label) { return 1; }
                     return 0;
                 });
+                console.log('[loadProducts] unitSizes', this.unitSizeOptions);
+                this.productTypeOptions = [...productTypes.values()].sort((a,b) => {
+                    if (a.label < b.label) { return -1; }
+                    if (a.label > b.label) { return 1; }
+                    return 0;                    
+                });      
+                console.log('[loadProducts] productTypeOptions', this.productTypeOptions);          
+                this.spiritTypeOptions = [...spiritTypes.values()].sort((a,b) => {
+                    if (a.label < b.label) { return -1; }
+                    if (a.label > b.label) { return 1; }
+                    return 0;                                        
+                });
+                console.log('[loadProducts] spiritTypeOptions', this.spiritTypeOptions);
 
                 let fcBrand = this.filterConfigs.find(fc => fc.name == 'brand');
                 fcBrand.options = this.brands;
@@ -228,22 +286,74 @@ export default class ProductQuilt extends LightningElement {
     toggleFilterView() {
         this.showFilters = !this.showFilters;
     }
+    filterProducts() {
+        console.log('[filterProducts] brandsSelected', this.brandsSelected);
+        console.log('[filterProducts] productTypesSelected', this.selectedProductTypes);
+        console.log('[filterProducts] selectedUnitSizes', this.selectedUnitSizes);
+        console.log('[filterProducts] selectedSpiritTypes', this.selectedSpiritTypes);
+
+        let newList = [...this.allProducts];
+        if (this.brandsSelected.length > 0) {
+            newList = newList.filter(p => this.brandsSelected.includes(p.Brand__c));
+            console.log('[filterProducts.brands] newList', newList);
+        }
+        if (this.selectedProductTypes.length > 0) {
+            newList = newList.filter(p => this.selectedProductTypes.includes(p.RecordTypeId));
+            console.log('[filterProducts.productType] newList', newList);
+        }
+        if (this.selectedUnitSizes.length > 0) {
+            newList = newList.filter(p => this.selectedUnitSizes.includes(p.Unit_Size__c.toString()));
+            console.log('[filterProducts.unitSize] newList', newList);
+        }
+        if (this.selectedSpiritTypes.length > 0) {
+            newList = newList.filter(p => p.Brand__r != undefined && this.selectedSpiritTypes.includes(p.Brand__r.Spirit_Type__c));
+            console.log('[filterProducts.spiritType] newList', newList);
+        }
+
+        this.products = [...newList];
+    }
+
     handleBrandsSelected(brandsSelected) {
         console.log('[productQuilt.handleBrandsSelected] brands', brandsSelected);
-        console.log('[productQuilt.handleBrandsSelected] wiredProducts', this.allProducts);
+        console.log('[productQuilt.handleBrandsSelected] allProducts', this.allProducts);
         try {
+            this.brandsSelected = [...brandsSelected];
             if (brandsSelected.length == 0) {
                 this.brandsSelected = '';
                 this.products = [...this.allProducts];
             } else {
-                this.brandsSelected = brandsSelected.join(',');
-                this.products = this.allProducts.filter(p => brandsSelected.indexOf(p.Brand__c) > -1);
+                //this.products = this.allProducts.filter(p => brandsSelected.indexOf(p.Brand__c) > -1);
+                this.filterProducts();
             }
-            console.log('[productQuilt.handleBrandsSelected] selectedproducts', this.products);
+            console.log('[productQuilt.handleBrandsSelected] products', this.products);
         }catch(ex) {
             console.log('[productQuilt.handleBrandsSelected] exception', ex);
         }
         
+    }    
+    handleProductTypeChange(e) {
+        this.selectedProductTypes = e.detail.value;
+        if (this.selectedProductTypes.length == 0) {
+            this.products = [...this.allProducts];
+        } else {
+            this.filterProducts();
+        }
+    }
+    handleUnitSizeChange(e) {
+        this.selectedUnitSizes = e.detail.value;
+        if (this.selectedUnitSizes.length == 0) {
+            this.products = [...this.allProducts];
+        } else {
+            this.filterProducts();
+        }
+    }
+    handleSpiritTypeChange(e) {
+        this.selectedSpiritTypes = e.detail.value;
+        if (this.selectedSpiritTypes.length == 0) {
+            this.products = [...this.allProducts];
+        } else {
+            this.filterProducts();
+        }
     }
 
     handleProductSelected(event) {

@@ -22,6 +22,7 @@
                                             input-field-2-name={priceFieldName}
                                             input-field-2-label={priceFieldLabel}
                                             input-field-2-type="currency"
+                                            input-field-2-value={product.price}
                                             selected-event-name="selected"
                                             de-selected-event-name="deselected"
                                             onselected={handleProductSelected}
@@ -124,6 +125,36 @@
                     <template if:true={showFilters}>
                         <div style="height: 500px; overflow-y: scroll;">
                             <c-brand-filter></c-brand-filter>
+                            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 10px;">
+                                <div if:true={includeDryGoods}>
+                                    <lightning-checkbox-group name="cProductTypes"
+                                            label={labels.productType.label}
+                                            options={productTypeOptions}
+                                            value={selectedProductTypes}
+                                            onchange={handleProductTypeChange}>
+                                    </lightning-checkbox-group>      
+                                </div>
+                                <div>
+                                    <lightning-checkbox-group name="cSpiritTypes"
+                                                label={labels.spiritType.label}
+                                                options={spiritTypeOptions}
+                                                value={selectedSpiritTypes}
+                                                onchange={handleSpiritTypeChange}>
+                                    </lightning-checkbox-group>      
+                                </div>
+                                <div>
+                                    <lightning-checkbox-group name="cUnitSizes"
+                                                label={labels.unitSize.label}
+                                                options={unitSizeOptions}
+                                                value={selectedUnitSizes}
+                                                onchange={handleUnitSizeChange}>
+                                    </lightning-checkbox-group>      
+                                </div>
+                            </div> 
+                            <hr style="margin-left: 10px; margin-right: 10px;" />                       
+                            <div>
+                                <c-brand-filter></c-brand-filter>
+                            </div>
                         </div>
                     </template>
                     <template if:false={showFilters}>
