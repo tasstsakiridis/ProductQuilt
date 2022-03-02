@@ -100,7 +100,7 @@
                                                 alternative-text="Filters"
                                                 onclick={toggleFilterView}>
                         </lightning-button-icon-stateful>
-                        <!--
+                        
                         <template if:true={selectedProducts}>
                             <lightning-button label={labels.save.label}
                                                 onclick={linkSelectedProducts}>
@@ -114,17 +114,11 @@
                                             onclick={removeSelectedProducts}>
                             </lightning-button>
                         </template>    
-                        <lightning-button-icon icon-name="utility:filterList" 
-                                                alternative-text="Filters" 
-                                                class="slds-m-left_x-small"
-                                                onclick={showFilters}>
-                        </lightning-button-icon>
-                    -->
+                    
                     </lightning-button-group>
 
                     <template if:true={showFilters}>
                         <div style="height: 500px; overflow-y: scroll;">
-                            <c-brand-filter></c-brand-filter>
                             <div style="display: flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 10px;">
                                 <div if:true={includeDryGoods}>
                                     <lightning-checkbox-group name="cProductTypes"
