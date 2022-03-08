@@ -1,0 +1,16 @@
+.content {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+c-brand-tile {
+    margin: 0.25rem;
+    max-width: 12em;
+    max-height: 12em;
+    min-width: 12em;
+    min-height: 8em;
+}
+
+c-paginator {
+    display: block;
+}

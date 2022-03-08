@@ -192,6 +192,9 @@ export default class SelectableTile extends LightningElement {
     }
 
     selectTile() {
+        console.log('[selectabletile.selectTile] product', this.title);
+        console.log('[selectabletile.selectTile] inputField1Value', this.inputField1Value);
+        console.log('[selectabletile.selectTile] inputField2Value', this.inputField2Value);
         this.isSelected = !this.isSelected;
         //this.updateTileClass();
         

@@ -1,0 +1,38 @@
+<template>
+    <lightning-card title={labels.brand.labelPlural}>
+        <template if:true={isPhone}>
+            <lightning-icon slot="actions" icon-name="utility:close" size="small" alternative-text="Close" onclick={handleCloseButtonClick}></lightning-icon>
+        </template>
+        <lightning-button slot="actions" label={labels.clear.label} icon-name="utility:clear" title="Clear" class="slds-m-horizontal_x-small" onclick={handleClearButtonClick} ></lightning-button>
+
+        <template if:true={showSearchBar}>
+            <div class="slds-m-horizontal_medium">
+                <lightning-input label={labels.search.label}
+                                type="search"
+                                onchange={handleSearchKeyChange}></lightning-input>
+            </div>
+        </template>
+        
+        <section>
+            <template if:true={brands}>
+                <template if:true={brands.records.length}>
+                    <div class="content">
+                        <template for:each={brands.records} for:item="brand">
+                            <c-brand-tile key={brand.Id} 
+                                        brand={brand} 
+                                        onselected={handleSelected}
+                                        ondeselected={handleDeSelected} ></c-brand-tile>
+                        </template>    
+                    </div>
+                    <c-paginator page-number={pageNumber}
+                                 page-size={brands.pageSize}
+                                 total-item-count={brands.totalItemCount}
+                                 object-type={labels.brand.labelPlural}
+                                 onprevious={handlePreviousPage}
+                                 onnext={handleNextPage}></c-paginator>
+    
+                </template>
+            </template>
+        </section>
+    </lightning-card>
+</template>
