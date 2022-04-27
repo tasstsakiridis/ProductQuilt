@@ -14,6 +14,8 @@ import LABEL_FILTERS from '@salesforce/label/c.Filters';
 import LABEL_LINK from '@salesforce/label/c.Link';
 import LABEL_PRODUCT from '@salesforce/label/c.Product';
 import LABEL_PRODUCTS from '@salesforce/label/c.Products';
+import LABEL_PRODUCT_NAME from '@salesforce/label/c.Product_Name';
+import LABEL_PRODUCT_NAME_FILTER from '@salesforce/label/c.Product_Name_Filter';
 import LABEL_PRODUCT_TYPE from '@salesforce/label/c.Product_Type';
 import LABEL_REMOVE from '@salesforce/label/c.Remove';
 import LABEL_SAVE from '@salesforce/label/c.Save';
@@ -32,6 +34,7 @@ export default class ProductQuilt extends LightningElement {
         filters:        { label: LABEL_FILTERS },
         linkProducts:   { label: `${LABEL_LINK} ${LABEL_PRODUCTS}` },
         product:        { label: LABEL_PRODUCT, labelPlural: LABEL_PRODUCTS },
+        productName:    { label: LABEL_PRODUCT_NAME, filterLabel: LABEL_PRODUCT_NAME_FILTER },
         productType:    { label: LABEL_PRODUCT_TYPE },
         removeProducts: { label: `${LABEL_REMOVE} ${LABEL_PRODUCTS}` },
         save:           { label: LABEL_SAVE },
@@ -105,6 +108,7 @@ export default class ProductQuilt extends LightningElement {
     selectedProductTypes = [];
     spiritTypeOptions;
     selectedSpiritTypes = [];
+    productNameFilter;
 
     unitSizeOptions = [];
     selectedUnitSizes = [];
@@ -113,7 +117,7 @@ export default class ProductQuilt extends LightningElement {
     brandsSelected = '';
     productsLoaded = false;
     showWetGoods = true;
-    showDryGoods = this.includeDryGoods;
+    showDryGoods = this.includeDryGoods;    
 
     get hasSelectedRows() {
         const datatable = this.template.querySelector('lightning-datatable');
@@ -291,6 +295,7 @@ export default class ProductQuilt extends LightningElement {
         console.log('[filterProducts] productTypesSelected', this.selectedProductTypes);
         console.log('[filterProducts] selectedUnitSizes', this.selectedUnitSizes);
         console.log('[filterProducts] selectedSpiritTypes', this.selectedSpiritTypes);
+        console.log('[filterProducts] productName', this.productNameFilter);
 
         let newList = [...this.allProducts];
         if (this.brandsSelected.length > 0) {
@@ -309,6 +314,10 @@ export default class ProductQuilt extends LightningElement {
             newList = newList.filter(p => p.Brand__r != undefined && this.selectedSpiritTypes.includes(p.Brand__r.Spirit_Type__c));
             console.log('[filterProducts.spiritType] newList', newList);
         }
+        if (this.productNameFilter != undefined && this.productNameFilter.length > 0) {
+            newList = newList.filter(p => p.Name.indexOf(this.productNameFilter) > -1 || (p.ProductCode__c != undefined && p.ProductCode__c.indexOf(this.productNameFilter) > -1));
+            console.log('[filterProducts.productName] newList', newList);
+        }
 
         this.products = [...newList];
     }
@@ -320,11 +329,8 @@ export default class ProductQuilt extends LightningElement {
             this.brandsSelected = [...brandsSelected];
             if (brandsSelected.length == 0) {
                 this.brandsSelected = '';
-                this.products = [...this.allProducts];
-            } else {
-                //this.products = this.allProducts.filter(p => brandsSelected.indexOf(p.Brand__c) > -1);
-                this.filterProducts();
             }
+            this.filterProducts();
             console.log('[productQuilt.handleBrandsSelected] products', this.products);
         }catch(ex) {
             console.log('[productQuilt.handleBrandsSelected] exception', ex);
@@ -333,26 +339,22 @@ export default class ProductQuilt extends LightningElement {
     }    
     handleProductTypeChange(e) {
         this.selectedProductTypes = e.detail.value;
-        if (this.selectedProductTypes.length == 0) {
-            this.products = [...this.allProducts];
-        } else {
-            this.filterProducts();
-        }
+        this.filterProducts();
     }
     handleUnitSizeChange(e) {
         this.selectedUnitSizes = e.detail.value;
-        if (this.selectedUnitSizes.length == 0) {
-            this.products = [...this.allProducts];
-        } else {
-            this.filterProducts();
-        }
+        this.filterProducts();
     }
     handleSpiritTypeChange(e) {
         this.selectedSpiritTypes = e.detail.value;
-        if (this.selectedSpiritTypes.length == 0) {
-            this.products = [...this.allProducts];
-        } else {
+        this.filterProducts();
+    }
+    handleProductNameFilterChange(e) {
+        try {
+            this.productNameFilter = e.detail.value;
             this.filterProducts();
+        }catch(ex) {
+            console.log('[handleProductNameFilterChange] exception', ex);
         }
     }
 

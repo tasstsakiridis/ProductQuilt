@@ -50,7 +50,7 @@ public with sharing class ProductQuilt_Controller {
             System.debug('[getProducts] rtWetGoods: ' + rtWetGoods);
 
             query = 'SELECT Id, Name, Brand__c, Brand__r.Name, Brand__r.Spirit_Type__c, Image_Name__c, Unit_Size__c, Supplier__c, Classification__c,';
-            query += ' Price__c, Wholesale_Price__c, RecordTypeId, RecordType.Name';
+            query += ' Price__c, Wholesale_Price__c, RecordTypeId, RecordType.Name, ProductCode__c';
             query += ' FROM Product__c ';
             query += ' WHERE Market__c =:marketId';
             query += ' AND IsActive__c=true';
