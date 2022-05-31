@@ -30,69 +30,10 @@
                                             onvalueupdated={handleProductInputUpdate}>
                             </c-selectable-tile>
                         </template>
-                        <!--
-                        <template for:each={products} for:item="product">
-                            <c-product-tile key={product.Id} 
-                                            product={product}
-                                            keep-selection="true"
-                                            class={product.Id}
-                                            quantity-field-name={quantityFieldName}
-                                            quantity-field-label={quantityFieldLabel}
-                                            price-field-name={priceFieldName}
-                                            price-field-label={priceFieldLabel}
-                                            onselected={handleProductSelected}
-                                            onqtyupdated={handleProductQtyUpdated}
-                                            onpriceupdated={handleProductPriceUpdated}>
-                            </c-product-tile>
-                        </template>   
-                    --> 
                     </template>
                 </div>
             </lightning-layout-item>
             <lightning-layout-item size="4" padding="around-small" class="slds-border_left">
-                        <!--
-                <template if:true={showFilters}>
-                    <div>
-                        <c-bf-filter-list filter-configs={filterConfigs} 
-                                          title={labels.filters.label}
-                                          refresh-on-selection="false"
-                                          onfilter={applyFilters}>
-                        </c-bf-filter-list>
-                        <lightning-input type="toggle"
-                                         label="Show selected products"
-                                         message-toggle-active="yes"
-                                         message-toggle-inactive="no"
-                                         name="selectedProductsToggle"
-                                         value={f_ShowSelectedProducts}
-                                         class="slds-m-bottom_small"
-                                         onchange={handleShowSelectedProductsToggle}>
-                        </lightning-input>
-                        <lightning-input type="search"
-                                         label="Name"
-                                         value={f_ProductName}
-                                         class="slds-m-bottom_small"
-                                         onchange={handleProductNameFilterChange}>
-                        </lightning-input>
-                        <lightning-dual-listbox name="brands"
-                                                label="Brands"
-                                                source-label="Available"
-                                                selected-label="Selected"
-                                                options={f_BrandOptions}
-                                                value={f_Brands}
-                                                class="slds-m-bottom_small"
-                                                onchange={handleBrandFilterChange}>
-                        </lightning-dual-listbox>
-                        <lightning-dual-listbox label="Unit Size"
-                                                source-label="Available"
-                                                selected-label="Selected"
-                                                options={f_UnitSizeOptions}
-                                                value={f_UnitSizes}
-                                                class="slds-m-bottom_small"
-                                                onchange={handleUnitSizeFilterChange}>
-                        </lightning-dual-listbox>
-                    </div>
-                </template>
-                    -->
                 <lightning-card variant="Narrow">
                     <lightning-button-group slot="actions">
                         <lightning-button-icon-stateful icon-name="utility:filterList" 
@@ -119,6 +60,13 @@
 
                     <template if:true={showFilters}>
                         <div style="height: 500px; overflow-y: scroll;">
+                            <div style="margin-bottom: 10px;">
+                                <lightning-input name="fProductName" 
+                                                label={labels.productName.filterLabel}
+                                                value={productNameFilter}
+                                                onchange={handleProductNameFilterChange}>
+                                </lightning-input>
+                            </div>
                             <div style="display: flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 10px;">
                                 <div if:true={includeDryGoods}>
                                     <lightning-checkbox-group name="cProductTypes"
