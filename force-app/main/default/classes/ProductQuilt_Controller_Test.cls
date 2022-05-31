@@ -63,7 +63,7 @@ private class ProductQuilt_Controller_Test {
             productsToDelete.add(String.valueOf(s.get('Id')));
         }
 
-        result = ProductQuilt_Controller.getProducts(pa.Id, linkToObject, linkToObjectFieldName, linkToObjectProductFieldName, usedFor, linkToObjectQtyFieldName, linkToObjectPriceFieldName);
+        result = ProductQuilt_Controller.getProducts(pa.Id, linkToObject, linkToObjectFieldName, linkToObjectProductFieldName, linkToObjectQtyFieldName, linkToObjectPriceFieldName, usedFor, true);
         System.assertEquals('SUCCESS', result.get('status'));
         System.assertNotEquals(null, result.get('products'));
 
