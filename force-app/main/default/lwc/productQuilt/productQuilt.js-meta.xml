@@ -24,6 +24,7 @@
             <property name="priceFieldLabel" label="Price field label" type="String" description="The label to display for the price field" default="" />
             <property name="defaultPriceFromProduct" label="Default price from Product" description="Load the price from the Product record based on channel. Price for On premise, Wholesale Price for Off premise" type="Boolean" default="false" />
             <property name="showFilters" label="Show Filters" type="Boolean" default="false" />
+            <property name="showTotals" label="Show Totals" type="Boolean" default="false" />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

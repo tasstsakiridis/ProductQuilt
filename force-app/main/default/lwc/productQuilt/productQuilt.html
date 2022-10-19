@@ -108,6 +108,14 @@
                                                 suppress-bottom-bar>
                             </lightning-datatable>
                         </div>
+                        <div if:true={showTotals} style="float: right; font-size: 12pt; font-weight: bold; margin-right: 5px;">
+                            <span style="margin-right: 10px;">{labels.totals.label}</span>
+                            <lightning-formatted-number value={totalPrice}
+                                                        format-style="currency"
+                                                        currency-code={userCurrencyCode}
+                                                        maximum-fraction-digits="2">
+                            </lightning-formatted-number>
+                        </div>
                     </template>
 
 

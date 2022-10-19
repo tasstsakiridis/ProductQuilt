@@ -3,6 +3,8 @@ import { CurrentPageReference, NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { registerListener, unregisterAllListeners } from 'c/pubsub';
 
+import CURRENCY from '@salesforce/i18n/currency';
+
 import getProducts from '@salesforce/apex/ProductQuilt_Controller.getProducts';
 import linkProducts from '@salesforce/apex/ProductQuilt_Controller.linkProducts';
 import deleteLinkedProducts from '@salesforce/apex/ProductQuilt_Controller.deleteLinkedProducts';
@@ -21,6 +23,7 @@ import LABEL_REMOVE from '@salesforce/label/c.Remove';
 import LABEL_SAVE from '@salesforce/label/c.Save';
 import LABEL_SUCCESS from '@salesforce/label/c.Success';
 import LABEL_SPIRIT_TYPE from '@salesforce/label/c.Spirit_Type';
+import LABEL_TOTAL from '@salesforce/label/c.Total';
 import LABEL_UNIT_SIZE from '@salesforce/label/c.Unit_Size';
 
 const selectedProductsColumns = [
@@ -39,6 +42,7 @@ export default class ProductQuilt extends LightningElement {
         removeProducts: { label: `${LABEL_REMOVE} ${LABEL_PRODUCTS}` },
         save:           { label: LABEL_SAVE },
         spiritType:     { label: LABEL_SPIRIT_TYPE },
+        totals:         { label: LABEL_TOTAL },
         unitSize:       { label: LABEL_UNIT_SIZE }
     };
 
@@ -78,6 +82,9 @@ export default class ProductQuilt extends LightningElement {
     @api
     showFilters;
 
+    @api
+    showTotals;
+
     @api 
     defaultPriceFromProduct;
 
@@ -96,6 +103,8 @@ export default class ProductQuilt extends LightningElement {
     }
 
     selectedProductsColumns = selectedProductsColumns;
+
+    userCurrencyCode = CURRENCY;    
 
     isWorking = false;
     products = [];
@@ -118,6 +127,8 @@ export default class ProductQuilt extends LightningElement {
     productsLoaded = false;
     showWetGoods = true;
     showDryGoods = this.includeDryGoods;    
+
+    totalPrice = 0;
 
     get hasSelectedRows() {
         const datatable = this.template.querySelector('lightning-datatable');
@@ -144,6 +155,7 @@ export default class ProductQuilt extends LightningElement {
     }
 
     connectedCallback() {
+        console.log('user currency code: ', this.userCurrencyCode);
         registerListener('brandsSelected', this.handleBrandsSelected, this);
 
         if (this.quantityFieldName != undefined) {
@@ -269,11 +281,14 @@ export default class ProductQuilt extends LightningElement {
                 this.linkedRows.clear();
                 if (result.linkedProducts) {
                     result.linkedProducts.forEach(r => {
-                        this.linkedRows.set(r.product, r);                
+                        this.linkedRows.set(r.product, r);  
                     });
 
                     this.selectedProducts = [...result.linkedProducts];
+    
+                    this.updateTotalPrice();
                 }
+
             }catch(ex) {
                 console.log('[loadProducts] exception', ex);
             }finally {
@@ -380,6 +395,9 @@ export default class ProductQuilt extends LightningElement {
                         };
             this.linkedRows.set(event.detail.id, row);
         }
+
+        this.updateTotalPrice();
+
         this.selectedProducts = [...this.linkedRows.values()];
         console.log('[productQuilt.handleProductSelected] selectedProducts', this.selectedProducts);
     }
@@ -388,34 +406,52 @@ export default class ProductQuilt extends LightningElement {
         console.log('[productQuilt.handleProductInputUpdate] linkedRows', this.linkedRows);
         console.log('[productQuilt.handleProductInputUpdate] quantityFieldName', this.quantityFieldName);
         console.log('[productQuilt.handleProductInputUpdate] priceFieldName', this.priceFieldName);
-        if (this.quantityFieldName == event.detail.fieldName) {
-            if (this.linkedRows.has(event.detail.id)) {
-                const row = this.linkedRows.get(event.detail.id);
-                row.qty = event.detail.fieldValue;
-                this.linkedRows.set(event.detail.id, row);
+        try {
+            if (this.quantityFieldName == event.detail.fieldName) {
+                if (this.linkedRows.has(event.detail.id)) {
+                    const row = {...this.linkedRows.get(event.detail.id)};
+                    row.qty = event.detail.fieldValue == undefined || event.detail.fieldValue == '' ? 0 : event.detail.fieldValue;
+                    this.linkedRows.set(event.detail.id, row);
+
+                    //this.totalPrice += (row.qty * row.price);
+                }
+            } else if (this.priceFieldName == event.detail.fieldName) {
+                if (this.linkedRows.has(event.detail.id)) {
+                    const row = {...this.linkedRows.get(event.detail.id)};
+                    //this.totalPrice -= row.price;
+
+                    row.price = event.detail.fieldValue == undefined || event.detail.fieldValue == '' ? 0 : event.detail.fieldValue;
+                    //this.totalPrice += (row.qty * row.price);
+                    
+                    this.linkedRows.set(event.detail.id, row);
+                }
             }
-        } else if (this.priceFieldName == event.detail.fieldName) {
-            if (this.linkedRows.has(event.detail.id)) {
-                const row = this.linkedRows.get(event.detail.id);
-                row.price = event.detail.fieldValue;
-                this.linkedRows.set(event.detail.id, row);
-            }
+
+            this.updateTotalPrice();
+
+            console.log('[productQuilt.handleProductInputUpdate] updated linkedRows', this.linkedRows);
+            this.selectedProducts = [...this.linkedRows.values()];
+        }catch(ex) {
+            console.log('[productQuilt.handleProductInputUpdate] exception', ex);
         }
-        console.log('[productQuilt.handleProductInputUpdate] updated linkedRows', this.linkedRows);
-        this.selectedProducts = [...this.linkedRows.values()];
     }
     handleProductQtyUpdated(event) {
         if (this.linkedRows.has(event.detail.productId)) {
             const row = this.linkedRows.get(event.detail.productId);
             row.qty = event.detail.qty;
             this.linkedRows.set(event.detail.productId, row);
+
+            this.totalPrice += (row.qty * row.price);
         }
     }
     handleProductPriceUpdated(event) {
         if (this.linkedRows.has(event.detail.productId)) {
-            const row = this.linkedRows.get(event.detail.productId);
+            const row = {...this.linkedRows.get(event.detail.productId)};
             row.price = event.detail.price;
+
             this.linkedRows.set(event.detail.productId, row);
+
+            this.updateTotalPrice();
         }
     }
     
@@ -439,6 +475,7 @@ export default class ProductQuilt extends LightningElement {
                         this.rowsToDelete.push(linkedRow.id);
                     }
                     self.linkedRows.delete(row.product);
+                    this.totalPrice -= (row.qty * row.price);
                 });
                 }
     
@@ -513,6 +550,11 @@ export default class ProductQuilt extends LightningElement {
         });
     }
     
+    updateTotalPrice() {
+        let total = 0;
+        this.linkedRows.forEach(r => total += r.qty * r.price);
+        this.totalPrice = total;
+    }
 
     applyFilters(event) {
         const filters = event.detail.filters;
