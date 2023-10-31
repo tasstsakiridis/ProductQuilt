@@ -26,7 +26,7 @@ import LABEL_SPIRIT_TYPE from '@salesforce/label/c.Spirit_Type';
 import LABEL_TOTAL from '@salesforce/label/c.Total';
 import LABEL_UNIT_SIZE from '@salesforce/label/c.Unit_Size';
 
-const selectedProductsColumns = [
+const SELECTED_PRODUCT_COLUMNS = [
     { label: LABEL_PRODUCT, fieldName: 'productName', type: 'text', wrapText: true }
 ];
 
@@ -102,7 +102,7 @@ export default class ProductQuilt extends LightningElement {
         this.currentPageReference = currentPageReference;
     }
 
-    selectedProductsColumns = selectedProductsColumns;
+    selectedProductsColumns = SELECTED_PRODUCT_COLUMNS;
 
     userCurrencyCode = CURRENCY;    
 
@@ -157,6 +157,8 @@ export default class ProductQuilt extends LightningElement {
     connectedCallback() {
         console.log('user currency code: ', this.userCurrencyCode);
         registerListener('brandsSelected', this.handleBrandsSelected, this);
+
+        this.selectedProductsColumns = [...SELECTED_PRODUCT_COLUMNS];
 
         if (this.quantityFieldName != undefined) {
             this.selectedProductsColumns.push({label: this.quantityFieldLabel, fieldName: 'qty', type: 'number', editable: false, initialWidth: 125});
