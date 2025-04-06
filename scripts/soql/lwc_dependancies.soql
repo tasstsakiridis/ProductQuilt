@@ -1,0 +1,3 @@
+sf data query --query "SELECT  MetadataComponentId, MetadataComponentName, MetadataComponentType, RefMetadataComponentId, RefMetadataComponentName, RefMetadataComponentType
+FROM    MetadataComponentDependency
+WHERE   RefMetadataComponentType ='LightningComponentBundle'" --result-format csv --target-org QA --output-file lwc_dependencies.csv --use-tooling-api

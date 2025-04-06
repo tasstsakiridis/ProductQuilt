@@ -1,0 +1,16 @@
+<!--
+  @description       : Component to show products and capture two (2) inputs
+  @author            : Tass Tsakiridis
+  @group             : Business Applications
+  @created           : 1st April 2025
+-->
+<template>
+    <lightning-combobox label={fieldLabel} name={fieldName} 
+                        class={cssClass}
+                        value={fieldValue}
+                        options={options}
+                        onchange={handleInputChange}
+                        onfocus={handleInputFocus}
+                        onblur={handleInputBlur}>
+    </lightning-combobox>
+</template>

@@ -3,13 +3,13 @@
 */
 public with sharing class ProductQuilt_Controller {
     @AuraEnabled(cacheable=true)
-    public static Map<String, Object> getProducts(String recordId, String linkToObject, String linkToObjectFieldName, String linkToObjectProductFieldName, String linkToObjectQtyFieldName, String linkToObjectPriceFieldName, String usedFor, Boolean includeDryGoods){
+    public static Map<String, Object> getProducts(String recordId, String linkToObject, String linkToObjectRecordType, String linkToObjectFieldName, String linkToObjectProductFieldName, String linkToObjectField1Name, String linkToObjectField2Name, String usedFor, Boolean includeDryGoods){
         Id theId = Id.valueOf(recordId);
         Schema.SObjectType typeOfObj = theId.getSobjectType();
         Schema.DescribeSObjectResult dsr = typeOfObj.getDescribe();
         Map<String, Schema.SObjectField> fields = dsr.fields.getMap();
         Boolean hasMarketField = fields.containsKey('Market__c');
-
+        
         if (includeDryGoods == null) { includeDryGoods = false; }
 
         String marketName = 'Australia';
@@ -22,13 +22,39 @@ public with sharing class ProductQuilt_Controller {
         System.debug('[getProducts] linkToObject: ' + linkToObject);
         System.debug('[getProducts] linkToObjectFieldName: ' + linkToObjectFieldName);
         System.debug('[getProducts] linkToObjectProductFieldName: ' + linkToObjectProductFieldName);
-        System.debug('[getProducts] linkToObjectQtyFieldName: ' + linkToObjectQtyFieldName);
-        System.debug('[getProducts] linkToObjectPriceFieldName: ' + linkToObjectPriceFieldName);
+        System.debug('[getProducts] linkToObjectField1Name: ' + linkToObjectField1Name);
+        System.debug('[getProducts] linkToObjectField2Name: ' + linkToObjectField2Name);
         System.debug('[getProducts] usedFor: ' + usedFor);
         System.debug('[getProducts] includeDryGoods: ' + includeDryGoods);
         System.debug('[getProducts] hasMarketField: ' + hasMarketField);
+        System.debug('[getProducts] dsr.name: ' + dsr.name);
 
         try {
+            List<Schema.DescribeSObjectResult> dResult = Schema.describeSObjects(new String[]{linkToObject});
+            if (dResult != null && dResult.size() > 0) {
+                Schema.DescribeSObjectResult linkToObjectDSR = dResult[0];
+                Map<String, Schema.SObjectField> linkToObjectFields = linkToObjectDSR.fields.getMap();
+
+                result.put('linkToObjectLabel', linkToObjectDSR.label);
+
+                Map<String, Schema.RecordTypeInfo> rtInfos = linkToObjectDSR.getRecordTypeInfosByDeveloperName();
+                if (!String.isEmpty(linkToObjectRecordType) && rtInfos.containsKey(linkToObjectRecordType)) {
+                    result.put('linkToObjectRecordTypeId', rtInfos.get(linkToObjectRecordType).getRecordTypeId());
+                }
+
+                Schema.DescribeFieldResult dfr;
+                if (!String.isEmpty(linkToObjectField1Name) && linkToObjectFields.containsKey(linkToObjectField1Name)) {
+                    dfr = linkToObjectFields.get(linkToObjectField1Name).getDescribe();
+                    result.put('inputField1Type', dfr.getType().toString());
+                    result.put('inputField1Label', dfr.getLabel());
+                }
+                if (!String.isEmpty(linkToObjectField2Name) && linkToObjectFields.containsKey(linkToObjectField2Name)) {
+                    dfr = linkToObjectFields.get(linkToObjectField2Name).getDescribe();
+                    result.put('inputField2Type', dfr.getType().toString());
+                    result.put('inputField2Label', dfr.getLabel());
+                }
+            }
+
             if (String.isEmpty(recordId) || hasMarketField == false) {
                 User u = [SELECT Id, Market__c FROM User WHERE Id =:UserInfo.getUserId()];
                 if (String.isNotEmpty(u.Market__c)) {
@@ -37,9 +63,10 @@ public with sharing class ProductQuilt_Controller {
                 Market__c market = [SELECT Id FROM Market__c WHERE Name =:marketName LIMIT 1];
                 marketId = market.Id;
             } else {
-                query = 'SELECT Market__c, Channel__c FROM ' + dsr.name + ' WHERE Id=:recordId';
+                query = 'SELECT Market__c, Market_Name__c, Channel__c FROM ' + dsr.name + ' WHERE Id=:recordId';
                 List<SObject> theRecord = Database.query(query);
                 marketId = String.valueOf(theRecord.get(0).get('Market__c'));
+                marketName = String.valueOf(theRecord.get(0).get('Market_Name__c'));
                 channel = String.valueOf(theRecord.get(0).get('Channel__c'));
             } 
             System.debug('[getProducts] marketId: ' + marketId + ', marketName: ' + marketName); 
@@ -70,11 +97,11 @@ public with sharing class ProductQuilt_Controller {
             if (String.isNotEmpty(recordId) && String.isNotEmpty(linkToObject) && String.isNotEmpty(linkToObjectFieldName)) {
                 String relatedFieldName = linkToObjectFieldName.replace('__c', '__r.Name');
                 query = 'SELECT Id, '+linkToObjectProductFieldName +', Product_Name__c';
-                if (String.isNotEmpty(linkToObjectQtyFieldName)) {
-                    query += ','+linkToObjectQtyFieldName;
+                if (String.isNotEmpty(linkToObjectField1Name)) {
+                    query += ','+linkToObjectField1Name;
                 }
-                if (String.isNotEmpty(linkToObjectPriceFieldName)) {
-                    query += ','+linkToObjectPriceFieldName;
+                if (String.isNotEmpty(linkToObjectField2Name)) {
+                    query += ','+linkToObjectField2Name;
                 }
                 query += ' FROM ' + linkToObject;
                 query += ' WHERE ' + linkToObjectFieldName + ' =:recordId';
@@ -89,11 +116,11 @@ public with sharing class ProductQuilt_Controller {
                             'product'=>o.get(linkToObjectProductFieldName),
                             'productName'=>o.get('Product_Name__c')
                         };
-                        if (String.isNotEmpty(linkToObjectQtyFieldName)) {
-                            m.put('qty', o.get(linkToObjectQtyFieldName));
+                        if (String.isNotEmpty(linkToObjectField1Name)) {
+                            m.put('qty', o.get(linkToObjectField1Name));
                         }
-                        if (String.isNotEmpty(linkToObjectPriceFieldName)) {
-                            m.put('price', o.get(linkToObjectPriceFieldName));
+                        if (String.isNotEmpty(linkToObjectField2Name)) {
+                            m.put('price', o.get(linkToObjectField2Name));
                         }
 
                         linkedProducts.add(m);

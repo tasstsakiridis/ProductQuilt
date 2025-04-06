@@ -6,6 +6,8 @@ import TEMPLATE_SELECTABLETILE_LEFT from './selectableTileImageLeft.html';
 import TEMPLATE_SELECTABLETILE_RIGHT from './selectableTileImageRight.html';
 import TEMPLATE_SELECTABLETILE_BOTTOM from './selectableTileImageBottom.html';
 
+const selectionTypeFields = ['COMBOBOX','PICKLIST','MULTIPICKLIST'];
+
 export default class SelectableTile extends LightningElement {
     labels = {
         deselect: { label: 'deselect' },
@@ -15,12 +17,6 @@ export default class SelectableTile extends LightningElement {
     tileClass = 'tile';
 
     @wire(CurrentPageReference) pageRef;
-
-    connectedCallback() {
-    }
-
-    disconnectedCallback() {
-    }
 
     @api 
     selectedEventName;
@@ -35,7 +31,10 @@ export default class SelectableTile extends LightningElement {
     objRecord;
 
     @api 
-    objRecordApiName;
+    objectApiName;
+
+    @api 
+    recordTypeId;
 
     @api 
     imageFieldName;
@@ -72,6 +71,12 @@ export default class SelectableTile extends LightningElement {
 
     @api 
     inputField2Value;
+
+    @api 
+    inputField1Type;
+
+    @api 
+    inputField2Type;
     
     /**
      * Public Methods
@@ -106,6 +111,10 @@ export default class SelectableTile extends LightningElement {
     set isSelected(value) {
         this._isSelected = value;
         this.updateTileClass();
+    }
+
+    get apiFields() {
+        return this.objRecordApiName != undefined;
     }
 
     get isImageTop() {
@@ -152,9 +161,15 @@ export default class SelectableTile extends LightningElement {
     get selectButtonLabel() {
         return this._isSelected ? this.labels.deselect.label : this.labels.select.label;
     }
+    get isField1SelectionField() {
+        return selectionTypeFields.indexOf(this.inputField1Type) >= 0;
+    }
+    get isField2SelectionField() {
+        return selectionTypeFields.indexOf(this.inputField2Type) >= 0;
+    }
 
     render() {
-        //console.log('[selectabletile.render] imageposition, input1, input2', this.imagePosition, this.inputField1Name, this.inputField2Name);
+        console.log('[selectabletile.render] imageposition', this.imagePosition);
         if (this.imagePosition == undefined || this.imagePosition == 'top') {
             return TEMPLATE_SELECTABLETILE_TOP;
         } else if (this.imagePosition == 'left') {
@@ -166,6 +181,12 @@ export default class SelectableTile extends LightningElement {
         }
     }
     
+    connectedCallback() {
+        console.log('[selectableTile] objectApiName, recordTypeId', this.objectApiName,this.recordTypeId);
+        console.log('[selectableTile] field1.name, field1.label', this.inputField1Name, this.inputField1Label);
+        console.log('[selectableTile] field2.name, field2.label', this.inputField2Name, this.inputField2Label);
+    }
+
     handleSelectTile(isSelected) {
         this._isSelected = isSelected;
         this.updateTileClass();
@@ -192,9 +213,6 @@ export default class SelectableTile extends LightningElement {
     }
 
     selectTile() {
-        console.log('[selectabletile.selectTile] product', this.title);
-        console.log('[selectabletile.selectTile] inputField1Value', this.inputField1Value);
-        console.log('[selectabletile.selectTile] inputField2Value', this.inputField2Value);
         this.isSelected = !this.isSelected;
         //this.updateTileClass();
         
@@ -205,7 +223,9 @@ export default class SelectableTile extends LightningElement {
                 isSelected: this._isSelected,
                 id: this.objRecordId,
                 name: this.title,
+                field1Name: this.inputField1Name,
                 field1Value: this.inputField1Value,
+                field2Name: this.inputField2Name,
                 field2Value: this.inputField2Value
             }
         });
@@ -232,7 +252,7 @@ export default class SelectableTile extends LightningElement {
                 detail: {
                     id: this.objRecordId,
                     fieldName: event.detail.fieldName,
-                    fieldValue: event.detail.value
+                    fieldValue: event.detail.fieldValue
                 }
             });
             console.log('[selectabletile.handleFieldValueUpdated] event', JSON.parse(JSON.stringify(ev)));

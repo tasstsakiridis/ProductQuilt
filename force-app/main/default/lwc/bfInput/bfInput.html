@@ -1,14 +1,22 @@
+<!--
+  @description       : Component to show products and capture two (2) inputs
+  @author            : Tass Tsakiridis
+  @group             : Business Applications
+  @last modified on  : 19th March 2025
+  @last modified by  : Sebastian Garcia
+  @comments          : Added configuration to configure input as a picklist
+-->
 <template>
-    <template if:true={isList}>
-        
-    </template>
-    <template if:false={isList}>
-        <lightning-input name={fieldName} class={fieldName}
-                        label={fieldLabel}
-                        value={fieldValue}
-                        type={fieldType}
-                        placeholder={placeholderText}
-                        onchange={handleInputChange}>
-        </lightning-input>                        
-    </template>
+      <template if:true={isList}>
+      
+      </template>
+      <template if:false={isList}>
+          <lightning-input name={fieldName} class={cssClass}
+                          label={fieldLabel}
+                          value={fieldValue}
+                          type={fieldType}
+                          placeholder={placeholderText}
+                          onchange={handleInputChange}>
+          </lightning-input>                        
+      </template>
 </template>

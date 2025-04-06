@@ -1,3 +1,11 @@
+<!--
+  @description       : Component to show products and capture two (2) inputs
+  @author            : Tass Tsakiridis
+  @group             : Business Applications
+  @last modified on  : 19th March 2025
+  @last modified by  : Sebastian Garcia
+  @comments          : Added configuration to configure input as a picklist
+-->
 <template>
     <div class={tileClass}>
         <a onclick={handleClick}>
@@ -17,30 +25,58 @@
                         {textLine1}
                     </lightning-layout-item>
                     <lightning-layout-item size="12">
-                        <template if:true={hasInputFields}>
-                            <div class="slds-grid">
-                                <template if:true={inputField1Name}>
-                                    <div class="slds-col slds-m-right_x-small">
-                                        <c-bf-input field-name={inputField1Name}
-                                                    field-label={inputField1Label}
-                                                    field-type={inputField1Type}
-                                                    field-value={inputField1Value}
-                                                    onupdatedvalue={handleFieldValueUpdated}>
-                                        </c-bf-input>
-                                    </div>
-                                </template>
-                                <template if:true={inputField2Name}>
-                                    <div class="slds-col slds-m-right_x-small">
-                                        <c-bf-input field-name={inputField2Name}
-                                                    field-label={inputField2Label}
-                                                    field-type={inputField2Type}
-                                                    field-value={inputField2Value}
-                                                    onupdatedvalue={handleFieldValueUpdated}>
-                                        </c-bf-input>                                        
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
+                            <template if:true={hasInputFields}>
+                                <div class="slds-grid">
+                                    <template if:true={inputField1Name}>
+                                        <div class="slds-col slds-m-right_x-small">
+                                            <template lwc:if={isField1SelectionField}>
+                                                <c-bf-input-select field-name={inputField1Name}
+                                                            field-label={inputField1Label}
+                                                            field-type={inputField1Type}
+                                                            field-value={inputField1Value}
+                                                            object-api-name={objectApiName}
+                                                            record-type-id={recordTypeId}
+                                                            onupdatedvalue={handleFieldValueUpdated}>
+                                                </c-bf-input-select>
+                                            </template>
+                                            <template lwc:else>
+                                                <c-bf-input field-name={inputField1Name}
+                                                            field-label={inputField1Label}
+                                                            field-type={inputField1Type}
+                                                            field-value={inputField1Value}
+                                                            object-api-name={objectApiName}
+                                                            record-type-id={recordTypeId}
+                                                            onupdatedvalue={handleFieldValueUpdated}>
+                                                </c-bf-input>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template if:true={inputField2Name}>
+                                        <div class="slds-col slds-m-right_x-small">
+                                            <template lwc:if={isField2SelectionField}>
+                                                <c-bf-input-select field-name={inputField2Name}
+                                                            field-label={inputField2Label}
+                                                            field-type={inputField2Type}
+                                                            field-value={inputField2Value}
+                                                            object-api-name={objectApiName}
+                                                            record-type-id={recordTypeId}
+                                                            onupdatedvalue={handleFieldValueUpdated}>
+                                                </c-bf-input-select>
+                                            </template>
+                                            <template lwc:else>
+                                                <c-bf-input field-name={inputField2Name}
+                                                            field-label={inputField2Label}
+                                                            field-type={inputField2Type}
+                                                            field-value={inputField2Value}
+                                                            object-api-name={objectApiName}
+                                                            record-type-id={recordTypeId}
+                                                            onupdatedvalue={handleFieldValueUpdated}>
+                                                </c-bf-input>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
                     </lightning-layout-item>
                 </lightning-layout>    
             </div>

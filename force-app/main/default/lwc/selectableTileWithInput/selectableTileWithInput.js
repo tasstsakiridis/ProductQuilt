@@ -27,8 +27,11 @@ export default class SelectableTileWithInput extends LightningElement {
     objRecord;
 
     @api 
-    objRecordApiName;
+    objectApiName;
 
+    @api 
+    recordTypeId;
+    
     @api 
     imageFieldName;
 

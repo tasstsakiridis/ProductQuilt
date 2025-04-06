@@ -1,3 +1,11 @@
+<!--
+  @description       : Component to show products and capture two (2) inputs
+  @author            : Tass Tsakiridis
+  @group             : Business Applications
+  @last modified on  : 19th March 2025
+  @last modified by  : Sebastian Garcia
+  @comments          : Added configuration to configure input as a picklist
+-->
 <template>
     <template if:true={isWorking}>
         <lightning-spinner alternative-text="Loading. Please wait..." size="large"></lightning-spinner>
@@ -6,30 +14,29 @@
         <lightning-layout>
             <lightning-layout-item size="8">
                 <div class="content">
-                    <template if:true={products}>
-                        <template for:each={products} for:item="product">                            
-                            <c-selectable-tile key={product.Id}
-                                            class={product.Id}
-                                            obj-record={product}
-                                            obj-record-id={product.Id}
-                                            obj-record-api-name="Product__c"
-                                            image-field-name="Image_Name__c"
-                                            image-position="left"
-                                            title={product.Name}
-                                            input-field-1-name={quantityFieldName}
-                                            input-field-1-label={quantityFieldLabel}
-                                            input-field-1-type="number"
-                                            input-field-2-name={priceFieldName}
-                                            input-field-2-label={priceFieldLabel}
-                                            input-field-2-type="currency"
-                                            input-field-2-value={product.price}
-                                            selected-event-name="selected"
-                                            de-selected-event-name="deselected"
-                                            onselected={handleProductSelected}
-                                            ondeselected={handleProductDeselected}
-                                            onvalueupdated={handleProductInputUpdate}>
-                            </c-selectable-tile>
-                        </template>
+                    <template for:each={products} for:item="product">                         
+                        <c-selectable-tile key={product.Id}
+                                        class={product.Id}
+                                        obj-record={product}
+                                        obj-record-id={product.Id}
+                                        object-api-name={linkToObject}
+                                        record-type-id={linkToObjectRecordTypeId}
+                                        image-field-name="Image_Name__c"
+                                        image-position="left"
+                                        title={product.Name}
+                                        input-field-1-name={inputField1Name}
+                                        input-field-1-label={inputField1Label}
+                                        input-field-1-type={inputField1Type}
+                                        input-field-2-name={inputField2Name}
+                                        input-field-2-label={inputField2Label}
+                                        input-field-2-type={inputField2Type}
+                                        input-field-2-value={product.price}
+                                        selected-event-name="selected"
+                                        de-selected-event-name="deselected"
+                                        onselected={handleProductSelected}
+                                        ondeselected={handleProductDeselected}
+                                        onvalueupdated={handleProductInputUpdate}>
+                        </c-selectable-tile>
                     </template>
                 </div>
             </lightning-layout-item>

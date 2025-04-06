@@ -27,12 +27,13 @@ img {
     border: 1px solid #e6e6e6;
     border-radius: 0.25rem;
 }
-
+/*
 .tile:hover {
     border: 2px solid #406ec8;
     border-radius: 0.25rem;
     transform: scale(1.15);
 }
+    */
 .tileDeSelected {
     border: 1px solid #e6e6e6;
     border-radius: 0.25rem;
