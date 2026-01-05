@@ -4,5 +4,13 @@
     <isExposed>true</isExposed>
     <targets>
         <target>lightning__AppPage</target>
+        <target>lightning__RecordPage</target>
     </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__RecordPage">
+            <property name="includeDryGoods" type="Boolean" label="Include Dry Goods" default="false" />
+            <property name="usedFor" type="String" label="Product Used For" datasource="Account Survey,Deals,Promotion" default="Promotion"/>
+            <property name="queryForBrands" type="Boolean" label="Query for Brands" default="true" />
+        </targetConfig>
+    </targetConfigs>
 </LightningComponentBundle>

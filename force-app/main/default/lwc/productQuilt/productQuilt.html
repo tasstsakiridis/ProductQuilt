@@ -2,7 +2,7 @@
   @description       : Component to show products and capture two (2) inputs
   @author            : Tass Tsakiridis
   @group             : Business Applications
-  @last modified on  : 19th March 2025
+  @last modified on  : 06-04-2025
   @last modified by  : Sebastian Garcia
   @comments          : Added configuration to configure input as a picklist
 -->
@@ -102,7 +102,7 @@
                             </div> 
                             <hr style="margin-left: 10px; margin-right: 10px;" />                       
                             <div>
-                                <c-brand-filter></c-brand-filter>
+                                <c-brand-filter record-id={recordId} used-for={usedFor} include-dry-goods={includeDryGoods} brands={brands} query-for-brands="false"></c-brand-filter>
                             </div>
                         </div>
                     </template>
@@ -115,7 +115,7 @@
                                                 suppress-bottom-bar>
                             </lightning-datatable>
                         </div>
-                        <div if:true={showTotals} style="float: right; font-size: 12pt; font-weight: bold; margin-right: 5px;">
+                        <div if:true={canCalculateTotals} style="float: right; font-size: 12pt; font-weight: bold; margin-right: 5px;">
                             <span style="margin-right: 10px;">{labels.totals.label}</span>
                             <lightning-formatted-number value={totalPrice}
                                                         format-style="currency"

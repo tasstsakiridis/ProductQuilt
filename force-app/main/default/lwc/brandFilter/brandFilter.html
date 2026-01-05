@@ -15,10 +15,10 @@
         
         <section>
             <template if:true={brands}>
-                <template if:true={brands.records.length}>
+                <template if:true={brands.length}>
                     <div class="content">
-                        <template for:each={brands.records} for:item="brand">
-                            <c-brand-tile key={brand.Id} 
+                        <template for:each={brands} for:item="brand">
+                            <c-brand-tile key={brand.value} 
                                         brand={brand} 
                                         onselected={handleSelected}
                                         ondeselected={handleDeSelected} ></c-brand-tile>

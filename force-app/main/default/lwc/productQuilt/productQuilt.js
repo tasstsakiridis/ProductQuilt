@@ -44,6 +44,8 @@ const DISPLAY_TYPES = {
     'URL'      : { fieldType: 'url'}
 };
 
+const ALLOWED_NUMERIC_TYPES = ['CURRENCY','DOUBLE','INTEGER','LONG'];
+
 export default class ProductQuilt extends LightningElement {
     labels = {
         addProduct:     { label: `${LABEL_ADD} ${LABEL_PRODUCT}` },
@@ -189,15 +191,6 @@ export default class ProductQuilt extends LightningElement {
         this._defaultPriceFromProduct = value;
     }
 
-    _usePrice = false;
-    @api
-    get usePrice() {
-        return this._usePrice;
-    }
-    set usePrice(value) {
-        this._usePrice = value;
-    }
-
     get isQuilt() {
         return this.type == 'Quilt';
     }
@@ -207,6 +200,10 @@ export default class ProductQuilt extends LightningElement {
 
     get isDoneLoading() {
         return this.products != undefined && this.isDoneLoadingWire != false;
+    }
+
+    get canCalculateTotals() {
+        return this.showTotals && ALLOWED_NUMERIC_TYPES.includes(this.inputField1Type) && ALLOWED_NUMERIC_TYPES.includes(this.inputField2Type);
     }
     
     pageRef;
@@ -295,11 +292,13 @@ export default class ProductQuilt extends LightningElement {
                 this.template.querySelectorAll("c-selectable-tile."+key)
             ).forEach(tile => {
                 console.log('[loadProducts] tile', tile);
-                if (this.inputField1Name && value.qty != undefined) {
-                    tile.updateField(this.inputField1Name, value.qty);
+                if (this.inputField1Name && value[this.inputField1Name] != undefined) {
+                    console.log('[loadProducts] inputField1Name ' + value[this.inputField1Name]);
+                    tile.updateField(this.inputField1Name, value[this.inputField1Name]);
                 }
-                if (this.inputField2Name && value.price != undefined) {
-                    tile.updateField(this.inputField2Name, value.price);
+                if (this.inputField2Name && value[this.inputField2Name] != undefined) {
+                    tile.updateField(this.inputField2Name, value[this.inputField2Name]);
+                    console.log('[loadProducts] inputField2Name ' + value[this.inputField2Name]);
                 }
                 tile.select();
             });    
@@ -374,7 +373,7 @@ export default class ProductQuilt extends LightningElement {
                         }
 
                         if (p.Brand__c != undefined && !brands.has(p.Brand__c)) {
-                            brands.set(p.Brand__c, { label: p.Brand__r.Name, value: p.Brand__c});
+                            brands.set(p.Brand__c, { label: p.Brand__r.Name, value: p.Brand__c, Name: p.Brand__r.Name, Primary_Logo__c: p.Brand__r.Primary_Logo__c });
                         }
                         if (p.Unit_Size__c != undefined && !unitSizes.has(p.Unit_Size__c)) {
                             unitSizes.set(p.Unit_Size__c, { label: p.Unit_Size__c.toString(), value: p.Unit_Size__c.toString()});
@@ -401,6 +400,7 @@ export default class ProductQuilt extends LightningElement {
                     if (a.label > b.label) { return 1; }
                     return 0;
                 });
+                console.log('[loadProducts] brands', this.brands.length, this.brands);
                 this.unitSizeOptions = [...unitSizes.values()].sort((a,b) => {
                     if (a.label < b.label) { return -1; }
                     if (a.label > b.label) { return 1; }
@@ -435,7 +435,9 @@ export default class ProductQuilt extends LightningElement {
 
                     this.selectedProducts = [...result.linkedProducts];
     
+                if (this.canCalculateTotals) {
                     this.updateTotalPrice();
+                }
                 }
 
             }catch(ex) {
@@ -473,7 +475,7 @@ export default class ProductQuilt extends LightningElement {
             console.log('[filterProducts.productType] newList', newList);
         }
         if (this.selectedUnitSizes.length > 0) {
-            newList = newList.filter(p => this.selectedUnitSizes.includes(p.Unit_Size__c.toString()));
+            newList = newList.filter(p => p.Unit_Size__c != undefined && this.selectedUnitSizes.includes(p.Unit_Size__c.toString()));
             console.log('[filterProducts.unitSize] newList', newList);
         }
         if (this.selectedSpiritTypes.length > 0) {
@@ -481,7 +483,7 @@ export default class ProductQuilt extends LightningElement {
             console.log('[filterProducts.spiritType] newList', newList);
         }
         if (this.productNameFilter != undefined && this.productNameFilter.length > 0) {
-            newList = newList.filter(p => p.Name.indexOf(this.productNameFilter) > -1 || (p.ProductCode__c != undefined && p.ProductCode__c.indexOf(this.productNameFilter) > -1));
+            newList = newList.filter(p => p.Name && p.Name.toLowerCase().indexOf(this.productNameFilter) > -1 || (p.ProductCode__c != undefined && p.ProductCode__c.indexOf(this.productNameFilter) > -1));
             console.log('[filterProducts.productName] newList', newList);
         }
 
@@ -554,31 +556,34 @@ export default class ProductQuilt extends LightningElement {
             this.linkedRows.set(event.detail.id, row);
         }
 
-        this.updateTotalPrice();
-
+        if (this.canCalculateTotals) {
+            this.updateTotalPrice();
+        }
         this.selectedProducts = [...this.linkedRows.values()];
         console.log('[productQuilt.handleProductSelected] selectedProducts', this.selectedProducts);
     }
+
     handleProductInputUpdate(event) {
         console.log('[productQuilt.handleProductInputUpdate] event', JSON.parse(JSON.stringify(event.detail)));
-        console.log('[productQuilt.handleProductInputUpdate] linkedRows', this.linkedRows);
-        console.log('[productQuilt.handleProductInputUpdate] quantityFieldName', this.quantityFieldName);
-        console.log('[productQuilt.handleProductInputUpdate] priceFieldName', this.priceFieldName);
         try {
-            if (this.linkedRows.has(event.detail.id)) {
-                const row = {...this.linkedRows.get(event.detail.id)};
-                row[this.inputField1Name] = event.detail.fieldValue == undefined || event.detail.fieldValue == '' ? 0 : event.detail.fieldValue;
-                this.linkedRows.set(event.detail.id, row);
+            const rowId = event.detail.id;
+            const fieldToUpdate = event.detail.fieldName;
+            const newValue = event.detail.fieldValue;
 
+            if (this.linkedRows.has(rowId) && fieldToUpdate) {
+                const row = {...this.linkedRows.get(rowId)};
+                row[fieldToUpdate] = newValue == undefined || newValue == '' ? 0 : newValue;
+                this.linkedRows.set(rowId, row);
             }
 
-            if (this.showTotals) {
+            if (this.canCalculateTotals) {
                 this.updateTotalPrice();
             }
 
             console.log('[productQuilt.handleProductInputUpdate] updated linkedRows', this.linkedRows);
             this.selectedProducts = [...this.linkedRows.values()];
-        }catch(ex) {
+
+        } catch(ex) {
             console.log('[productQuilt.handleProductInputUpdate] exception', ex);
         }
     }
@@ -603,7 +608,10 @@ export default class ProductQuilt extends LightningElement {
                         this.rowsToDelete.push(linkedRow.id);
                     }
                     self.linkedRows.delete(row.product);
-                    this.totalPrice -= (row.qty * row.price);
+                    
+                    if(this.canCalculateTotals) {
+                        this.totalPrice -= (row.qty * row.price);
+                    }
                 });
                 }
     
@@ -639,6 +647,7 @@ export default class ProductQuilt extends LightningElement {
             this.isWorking = false;
         });    
     }
+
     linkSelectedProducts() {
         console.log('[linkProducts] linkedRows', JSON.parse(JSON.stringify(this.linkedRows)));
         console.log('[linkProducts] selectedProducts', this.selectedProducts);
@@ -647,8 +656,10 @@ export default class ProductQuilt extends LightningElement {
                 linkToObject: this.linkToObject, 
                 linkToObjectFieldName: this.linkToObjectFieldName, 
                 linkToObjectProductFieldName: this.linkToObjectProductFieldName,
-                linkToObjectQtyFieldName: this.quantityFieldName,
-                linkToObjectPriceFieldName: this.priceFieldName,
+                linkToInputFieldName1: this.inputField1Name,
+                linkToInputFieldName2: this.inputField2Name,
+                linkToInputField1Type: this.inputField1Type,
+                linkToInputField2Type: this.inputField2Type,
                 selectedProducts: this.selectedProducts,
         }).then(result => {
             console.log('[linkProducts] result', JSON.parse(JSON.stringify(result)));

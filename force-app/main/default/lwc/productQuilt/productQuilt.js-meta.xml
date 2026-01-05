@@ -14,19 +14,18 @@
         <targetConfig targets="lightning__AppPage,lightning__RecordPage">
             <property name="type" type="String" label="Object" datasource="Quilt,List" default="Quilt"/>
             <property name="includeDryGoods" type="Boolean" label="Include Dry Goods" default="false" />
-            <property name="usePrice" type="Boolean" label="Use this Component for Quantity and Price" default="true"/>
             <property name="linkToObject" label="Link to Object" type="String" description="API Name of Object to link the selected products to" default='Activity_Product__c' />
-            <property name="linkToObjectRecordType" label="Record Type" type="String" description="The Developer Name of the record type to use for any picklist fields" />
+            <property name="linkToObjectRecordType" label="Record Type" type="String" description="The Developer Name of the record type used in 'Link to Object', will be used for any picklist fields on that object." />
             <property name="linkToObjectFieldName" label="Link to Object Field Name" type="String" description="API Name of the Parent Field on the Link to Object" default='Activity__c'/>
             <property name="linkToObjectProductFieldName" label="Link to Object Product fieldname" type="String" description="API name of the Product field on the Link to Object" default="Product__c" />
             <property name="productUsedFor" label="Product Used For" type="String" description="Only load products where Used For is" datasource="Account Survey,Promotion,Order,CPT,Fee,Incentive,Sample Order,Sample Order - E-Premise,Sample Order - UK,High Value,Employee Request"/>
-            <property name="inputField1Name" label="Input field1 name" type="String" description="API name of the field on the linked object to use to capture quantity" default="" />
-            <property name="inputField1Label" label="Input field1 label" type="String" description="The label to display for the quantity field" default="" />
-            <property name="inputField2Name" label="Input field2 name" type="String" description="API name of the field on the linked object to used to capture price" default="" />
-            <property name="inputField2Label" label="Input field2 label" type="String" description="The label to display for the price field" default="" />
+            <property name="inputField1Name" label="Input Field 1 name" type="String" description="API name of the field on the linked object to use to capture quantity" default="" />
+            <property name="inputField1Label" label="Input Field 1 label" type="String" description="The label to display for the quantity field" default="" />
+            <property name="inputField2Name" label="Input Field 2 name" type="String" description="API name of the field on the linked object to used to capture price" default="" />
+            <property name="inputField2Label" label="Input Field 2 label" type="String" description="The label to display for the price field" default="" />
             <property name="defaultPriceFromProduct" label="Default price from Product" description="Load the price from the Product record based on channel. Price for On premise, Wholesale Price for Off premise" type="Boolean" default="false" />
             <property name="showFilters" label="Show Filters" type="Boolean" default="false" />
-            <property name="showTotals" label="Show Totals" type="Boolean" default="false" />
+            <property name="showTotals" label="Show Totals" description="Ensure that Input Field 1 and 2 are numeric fields. Total Price is obtained by summing the products of Field 1 and 2." type="Boolean" default="false" />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

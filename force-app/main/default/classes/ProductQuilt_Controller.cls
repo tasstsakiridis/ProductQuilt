@@ -1,7 +1,13 @@
 /**
 * Test Class:  ProductQuilt_Controller_Test
 */
+
 public with sharing class ProductQuilt_Controller {
+
+    // List of constants to be used within LinkProducts to verify the type of the input.
+    public static final List<String> ALLOWED_NUMERIC_TYPES = new List<String>{'DOUBLE', 'CURRENCY'};
+    public static final List<String> ALLOWED_SELECTION_TYPES = new List<String>{'PICKLIST', 'STRING'};
+    
     @AuraEnabled(cacheable=true)
     public static Map<String, Object> getProducts(String recordId, String linkToObject, String linkToObjectRecordType, String linkToObjectFieldName, String linkToObjectProductFieldName, String linkToObjectField1Name, String linkToObjectField2Name, String usedFor, Boolean includeDryGoods){
         Id theId = Id.valueOf(recordId);
@@ -76,7 +82,7 @@ public with sharing class ProductQuilt_Controller {
             String rtWetGoods = rtList.get('Wet Goods').getRecordTypeId();
             System.debug('[getProducts] rtWetGoods: ' + rtWetGoods);
 
-            query = 'SELECT Id, Name, Brand__c, Brand__r.Name, Brand__r.Spirit_Type__c, Image_Name__c, Unit_Size__c, Supplier__c, Classification__c,';
+            query = 'SELECT Id, Name, Brand__c, Brand__r.Name, Brand__r.Primary_Logo__c, Brand__r.Spirit_Type__c, Image_Name__c, Unit_Size__c, Supplier__c, Classification__c,';
             query += ' Price__c, Wholesale_Price__c, RecordTypeId, RecordType.Name, ProductCode__c';
             query += ' FROM Product__c ';
             query += ' WHERE Market__c =:marketId';
@@ -93,6 +99,11 @@ public with sharing class ProductQuilt_Controller {
             query += ' ORDER BY Sort_Order__c, Name';
             System.debug('product query: ' + query);
             List<Product__c> products = Database.query(query);
+
+            Set<Brand__c> brands = new Set<Brand__c>();
+            for(Product__c p : products) {
+                brands.add(p.Brand__r);
+            }
 
             if (String.isNotEmpty(recordId) && String.isNotEmpty(linkToObject) && String.isNotEmpty(linkToObjectFieldName)) {
                 String relatedFieldName = linkToObjectFieldName.replace('__c', '__r.Name');
@@ -117,10 +128,10 @@ public with sharing class ProductQuilt_Controller {
                             'productName'=>o.get('Product_Name__c')
                         };
                         if (String.isNotEmpty(linkToObjectField1Name)) {
-                            m.put('qty', o.get(linkToObjectField1Name));
+                            m.put(linkToObjectField1Name, o.get(linkToObjectField1Name));
                         }
                         if (String.isNotEmpty(linkToObjectField2Name)) {
-                            m.put('price', o.get(linkToObjectField2Name));
+                            m.put(linkToObjectField2Name, o.get(linkToObjectField2Name));
                         }
 
                         linkedProducts.add(m);
@@ -133,6 +144,7 @@ public with sharing class ProductQuilt_Controller {
 
             result.put('channel', channel);
             result.put('products', products);
+            result.put('brands', brands);
             result.put('status', 'SUCCESS');
         }catch(Exception ex) {
             result.put('error', ex.getMessage());
@@ -143,16 +155,20 @@ public with sharing class ProductQuilt_Controller {
     }
 
     @AuraEnabled
-    public static Map<String, Object> linkProducts(String recordId, String linkToObject, String linkToObjectFieldName, String linkToObjectProductFieldName, String linkToObjectQtyFieldName, String linkToObjectPriceFieldName, List<Map<String, Object>> selectedProducts){
+    public static Map<String, Object> linkProducts(String recordId, String linkToObject, String linkToObjectFieldName, String linkToObjectProductFieldName, String linkToInputFieldName1, String linkToInputFieldName2, String linkToInputField1Type, String linkToInputField2Type, List<Map<String, Object>> selectedProducts){
         Map<String, Object> result = new Map<String, Object>();
+        Boolean hasInputTypes = String.isNotEmpty(linkToInputField1Type) && String.isNotEmpty(linkToInputField2Type);
+        
         try {
             System.debug('recordId: ' + recordId);
             System.debug('linkToObject: ' + linkToObject);
             System.debug('linkToObjectFieldName: ' + linkToObjectFieldName);
             System.debug('linkToObjectProductFieldName: ' + linkToObjectProductFieldName);
-            System.debug('linkToObjectQuantityFieldName: ' + linkToObjectQtyFieldName);
-            System.debug('linkToObjectPriceFieldName: ' + linkToObjectPriceFieldName);
+            System.debug('linkToInputFieldName1: ' + linkToInputFieldName1);
+            System.debug('linkToInputFieldName1: ' + linkToInputFieldName2);
             System.debug('selectedProducts: ' + selectedProducts);
+            System.debug('linkToInputField1Type ' + linkToInputField1Type);
+            System.debug('linkToInputField2Type ' + linkToInputField2Type);
             if (!selectedProducts.isEmpty()) {
                 List<SObject> rows = new List<SObject>();
                 for(Map<String,Object> o : selectedProducts) {
@@ -160,6 +176,9 @@ public with sharing class ProductQuilt_Controller {
                     String linkedRowId = String.valueOf(o.get('id'));
                     String productId = String.valueOf(o.get('product'));
                     SObject newRow = Schema.getGlobalDescribe().get(linkToObject).newSObject();
+                    Boolean hasInputField1 = String.isNotEmpty(linkToInputFieldName1) && o.containsKey(linkToInputFieldName1);
+                    Boolean hasInputField2 = String.isNotEmpty(linkToInputFieldName2) && o.containsKey(linkToInputFieldName2);
+
                     if (String.isEmpty(linkedRowId)) {
                         newRow.put(linkToObjectFieldName, recordId);
                     } else {
@@ -168,20 +187,50 @@ public with sharing class ProductQuilt_Controller {
 
                     newRow.put(linkToObjectProductFieldName, productId);
 
-                    System.debug('qty: ' + o.get('qty'));
-                    System.debug('price: ' + o.get('price'));
-                    if (String.isNotEmpty(linkToObjectQtyFieldName)) {
-                        newRow.put(linkToObjectQtyFieldName, Double.valueOf(o.get('qty')));
-                    }
-                    if (String.isNotEmpty(linkToObjectPriceFieldName)) {
-                        newRow.put(linkToObjectPriceFieldName, Double.valueOf(o.get('price')));
-                    }                        
+                    if(hasInputTypes) {
+                        // Handle input field 1
+                        if(hasInputField1) {
+                            Object inputField1 = o.get(linkToInputFieldName1);
 
+                            if (ALLOWED_NUMERIC_TYPES.contains(linkToInputField1Type)) {
+                                newRow.put(linkToInputFieldName1, Double.valueOf(inputField1));
+                            } else if (ALLOWED_SELECTION_TYPES.contains(linkToInputField1Type)) {
+                                try {
+                                    newRow.put(linkToInputFieldName1, String.valueOf(inputField1));
+                                } catch (Exception ex) {
+                                    System.debug('Could not parse selection value into String in inputField1: ' + inputField1 + '. Error: ' + ex.getMessage());
+                                }
+                            } else {
+                                System.debug('Unexpected type for ' + linkToInputFieldName1);
+                            }
+                        }
+
+                        //Handle input field 2
+                        if (hasInputField2) {
+                            Object inputField2 = o.get(linkToInputFieldName2);
+
+                            if (ALLOWED_NUMERIC_TYPES.contains(linkToInputField2Type)) {
+                                newRow.put(linkToInputFieldName2, Double.valueOf(inputField2));
+                            } else if (ALLOWED_SELECTION_TYPES.contains(linkToInputField2Type)) {
+                                try {
+                                    newRow.put(linkToInputFieldName2, String.valueOf(inputField2));
+                                } catch (Exception ex) {
+                                    System.debug('Could not parse selection value into String in inputField2: ' + inputField2 + '. Error: ' + ex.getMessage());
+                                }
+                            } else {
+                                System.debug('Unexpected type for ' + linkToInputFieldName2);
+                            }
+                        }
+                    }
                     rows.add(newRow);
                 }
 
                 if (rows.size() > 0) {
-                    upsert rows;
+                    try {
+                        upsert rows;
+                    } catch (DmlException ex) {
+                        System.debug('[linkProducts] DmlException : ' + ex.getMessage());
+                    }
                 }
 
                 result.put('status','SUCCESS');

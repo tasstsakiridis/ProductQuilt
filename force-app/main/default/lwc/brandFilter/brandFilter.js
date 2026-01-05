@@ -4,7 +4,7 @@ import { fireEvent } from 'c/pubsub';
 
 import CLIENT_FORM_FACTOR from '@salesforce/client/formFactor';
 
-import getBrands from '@salesforce/apex/PromotionalSalesAgreement_Controller.getBrands';
+import getBrands from '@salesforce/apex/ProductQuilt_Controller.getProducts';
 
 import LABEL_BRAND from '@salesforce/label/c.Brand';
 import LABEL_BRANDS from '@salesforce/label/c.Brands';
@@ -18,6 +18,12 @@ export default class BrandFilter extends LightningElement {
         search: { label: LABEL_SEARCH },
     };
 
+    @api recordId;
+    @api usedFor;
+    @api includeDryGoods;
+    @api brands;
+    @api queryForBrands = false
+
     isPhone = CLIENT_FORM_FACTOR === "Small";
 
     pageNumber = 1;
@@ -26,7 +32,7 @@ export default class BrandFilter extends LightningElement {
 
     @wire(CurrentPageReference) pageRef;
 
-    @api brands;
+    /*
     @wire(getBrands, { pageNumber: '$pageNumber' })
     wiredGetBrands({error, data}) {
         console.log('[getBrands] data', data);
@@ -39,6 +45,32 @@ export default class BrandFilter extends LightningElement {
             this.brands = undefined;
         }
     }    
+    */
+
+    connectedCallback() {
+        if (this.brandsLoaded) {
+            return;
+        }
+
+        this.brandsLoaded = true;
+        if (this.queryForBrands) {
+            this.getMarketBrands();
+        }
+    }
+
+    getMarketBrands() {
+        getBrands({
+            recordId: this.recordId,
+            usedFor: this.usedFor,
+            includeDryGoods: this.includeDryGoods
+        }).then(result => {
+            this.error = undefined;
+            this.brands = result;
+        }).catch(error => {
+            this.error = error;
+            this.brands = undefined;
+        });
+    }
 
     handlePreviousPage() {
         this.pageNumber = this.pageNumber - 1;
