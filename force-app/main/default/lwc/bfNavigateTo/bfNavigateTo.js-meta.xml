@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Navigate</masterLabel>
+    <targets>
+        <target>lightning__FlowAction</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__FlowAction">
+            <property name="recordId" type="String" label="Id of record to navigate to" />
+            <property name="objectApiName" type="String" label="API name of object to navigate to" />
+            <property name="navigateTo" type="String" label="Navigate to Object or Record" description="Valid values are: Object,Record" />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

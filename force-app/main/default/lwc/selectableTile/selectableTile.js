@@ -169,7 +169,7 @@ export default class SelectableTile extends LightningElement {
     }
 
     render() {
-        console.log('[selectabletile.render] imageposition', this.imagePosition);
+        //console.log('[selectabletile.render] imageposition', this.imagePosition);
         if (this.imagePosition == undefined || this.imagePosition == 'top') {
             return TEMPLATE_SELECTABLETILE_TOP;
         } else if (this.imagePosition == 'left') {
@@ -182,9 +182,9 @@ export default class SelectableTile extends LightningElement {
     }
     
     connectedCallback() {
-        console.log('[selectableTile] objectApiName, recordTypeId', this.objectApiName,this.recordTypeId);
-        console.log('[selectableTile] field1.name, field1.label', this.inputField1Name, this.inputField1Label);
-        console.log('[selectableTile] field2.name, field2.label', this.inputField2Name, this.inputField2Label);
+        //console.log('[selectableTile] objectApiName, recordTypeId', this.objectApiName,this.recordTypeId);
+        //console.log('[selectableTile] field1.name, field1.label', this.inputField1Name, this.inputField1Label);
+        //console.log('[selectableTile] field2.name, field2.label', this.inputField2Name, this.inputField2Label);
     }
 
     handleSelectTile(isSelected) {
@@ -215,7 +215,6 @@ export default class SelectableTile extends LightningElement {
     selectTile() {
         this.isSelected = !this.isSelected;
         //this.updateTileClass();
-        
         let eventName = this.selectedEventName == undefined || this.selectedEventName == '' ? 'selected' : this.selectedEventName;
         console.log('[selectabletile.selectTile] eventname', eventName);
         const selectedEvent = new CustomEvent(eventName, {
@@ -245,6 +244,8 @@ export default class SelectableTile extends LightningElement {
         } else if (this.inputField2Name == event.detail.fieldName) {
             this.inputField2Value = event.detail.value;
         }
+        console.log('[selectableTile.handleFieldValueUpdatd] inputField1Value ',this.inputField1Value);
+        console.log('[selectableTile.handleFieldValueUpdatd] inputField2Value ',this.inputField2Value);
 
         console.log('[selectableTile.handleFieldValueUpdatd] isSelected', this.isSelected);
         if (this.isSelected) {
@@ -252,7 +253,7 @@ export default class SelectableTile extends LightningElement {
                 detail: {
                     id: this.objRecordId,
                     fieldName: event.detail.fieldName,
-                    fieldValue: event.detail.fieldValue
+                    fieldValue: event.detail.value
                 }
             });
             console.log('[selectabletile.handleFieldValueUpdated] event', JSON.parse(JSON.stringify(ev)));

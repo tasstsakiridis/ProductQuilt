@@ -21,11 +21,20 @@ export default class BrandFilter extends LightningElement {
     @api recordId;
     @api usedFor;
     @api includeDryGoods;
-    @api brands;
     @api queryForBrands = false
 
-    isPhone = CLIENT_FORM_FACTOR === "Small";
+    _brands = [];
+    @api
+    get brands() {
+        return this._brands;
+    }
+    set brands(val) {
+        this._brands = val;
+        console.log('[brandFilter.set brands] brands', val);
+    }
 
+    isPhone = CLIENT_FORM_FACTOR === "Small";
+    
     pageNumber = 1;
     brandsSelected = [];
     showSearchBar = false;
@@ -48,22 +57,28 @@ export default class BrandFilter extends LightningElement {
     */
 
     connectedCallback() {
+        console.log('[brandFilter.connectedCallback] brandsLoaded', this.brandsLoaded);
+        console.log('[brandFilter.connectedCallback] brands', this.brands);
+        console.log('[brandFilter.connectedCallback] queryForBrands', this.queryForBrands);
         if (this.brandsLoaded) {
             return;
         }
 
         this.brandsLoaded = true;
-        if (this.queryForBrands) {
+        if (this.queryForBrands == true) {
             this.getMarketBrands();
         }
     }
 
     getMarketBrands() {
+        console.log('[brandFilter.getMarketBrands] recordId, usedFor, includeDryGoods', this.recordId, this.usedFor, this.includeDryGoods);
+        console.log('[brandFilter.getMarketBrands] brands', this.brands);
         getBrands({
             recordId: this.recordId,
             usedFor: this.usedFor,
             includeDryGoods: this.includeDryGoods
         }).then(result => {
+            console.log('[brandFilter.getMarketBrands] result', result);
             this.error = undefined;
             this.brands = result;
         }).catch(error => {

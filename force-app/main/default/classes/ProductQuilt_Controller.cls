@@ -34,30 +34,33 @@ public with sharing class ProductQuilt_Controller {
         System.debug('[getProducts] includeDryGoods: ' + includeDryGoods);
         System.debug('[getProducts] hasMarketField: ' + hasMarketField);
         System.debug('[getProducts] dsr.name: ' + dsr.name);
+        System.debug('[getProducts] typeOfObj: ' + typeOfObj);
 
         try {
-            List<Schema.DescribeSObjectResult> dResult = Schema.describeSObjects(new String[]{linkToObject});
-            if (dResult != null && dResult.size() > 0) {
-                Schema.DescribeSObjectResult linkToObjectDSR = dResult[0];
-                Map<String, Schema.SObjectField> linkToObjectFields = linkToObjectDSR.fields.getMap();
+            if (String.isNotEmpty(linkToObject)) {
+                List<Schema.DescribeSObjectResult> dResult = Schema.describeSObjects(new String[]{linkToObject});
+                if (dResult != null && dResult.size() > 0) {
+                    Schema.DescribeSObjectResult linkToObjectDSR = dResult[0];
+                    Map<String, Schema.SObjectField> linkToObjectFields = linkToObjectDSR.fields.getMap();
 
-                result.put('linkToObjectLabel', linkToObjectDSR.label);
+                    result.put('linkToObjectLabel', linkToObjectDSR.label);
 
-                Map<String, Schema.RecordTypeInfo> rtInfos = linkToObjectDSR.getRecordTypeInfosByDeveloperName();
-                if (!String.isEmpty(linkToObjectRecordType) && rtInfos.containsKey(linkToObjectRecordType)) {
-                    result.put('linkToObjectRecordTypeId', rtInfos.get(linkToObjectRecordType).getRecordTypeId());
-                }
+                    Map<String, Schema.RecordTypeInfo> rtInfos = linkToObjectDSR.getRecordTypeInfosByDeveloperName();
+                    if (!String.isEmpty(linkToObjectRecordType) && rtInfos.containsKey(linkToObjectRecordType)) {
+                        result.put('linkToObjectRecordTypeId', rtInfos.get(linkToObjectRecordType).getRecordTypeId());
+                    }
 
-                Schema.DescribeFieldResult dfr;
-                if (!String.isEmpty(linkToObjectField1Name) && linkToObjectFields.containsKey(linkToObjectField1Name)) {
-                    dfr = linkToObjectFields.get(linkToObjectField1Name).getDescribe();
-                    result.put('inputField1Type', dfr.getType().toString());
-                    result.put('inputField1Label', dfr.getLabel());
-                }
-                if (!String.isEmpty(linkToObjectField2Name) && linkToObjectFields.containsKey(linkToObjectField2Name)) {
-                    dfr = linkToObjectFields.get(linkToObjectField2Name).getDescribe();
-                    result.put('inputField2Type', dfr.getType().toString());
-                    result.put('inputField2Label', dfr.getLabel());
+                    Schema.DescribeFieldResult dfr;
+                    if (!String.isEmpty(linkToObjectField1Name) && linkToObjectFields.containsKey(linkToObjectField1Name)) {
+                        dfr = linkToObjectFields.get(linkToObjectField1Name).getDescribe();
+                        result.put('inputField1Type', dfr.getType().toString());
+                        result.put('inputField1Label', dfr.getLabel());
+                    }
+                    if (!String.isEmpty(linkToObjectField2Name) && linkToObjectFields.containsKey(linkToObjectField2Name)) {
+                        dfr = linkToObjectFields.get(linkToObjectField2Name).getDescribe();
+                        result.put('inputField2Type', dfr.getType().toString());
+                        result.put('inputField2Label', dfr.getLabel());
+                    }
                 }
             }
 
@@ -96,7 +99,7 @@ public with sharing class ProductQuilt_Controller {
             if (String.isNotEmpty(channel)) {
                 query += ' AND (Channel__c =:channel OR Channel__c=\'Both\')';
             }
-            query += ' ORDER BY Sort_Order__c, Name';
+            query += ' ORDER BY Is_Popular_Product__c DESC, Sort_Order__c, Name';
             System.debug('product query: ' + query);
             List<Product__c> products = Database.query(query);
 
@@ -155,12 +158,13 @@ public with sharing class ProductQuilt_Controller {
     }
 
     @AuraEnabled
-    public static Map<String, Object> linkProducts(String recordId, String linkToObject, String linkToObjectFieldName, String linkToObjectProductFieldName, String linkToInputFieldName1, String linkToInputFieldName2, String linkToInputField1Type, String linkToInputField2Type, List<Map<String, Object>> selectedProducts){
+    public static Map<String, Object> linkProducts(String recordId, String recordTypeId, String linkToObject, String linkToObjectFieldName, String linkToObjectProductFieldName, String linkToInputFieldName1, String linkToInputFieldName2, String linkToInputField1Type, String linkToInputField2Type, List<Map<String, Object>> selectedProducts){
         Map<String, Object> result = new Map<String, Object>();
         Boolean hasInputTypes = String.isNotEmpty(linkToInputField1Type) && String.isNotEmpty(linkToInputField2Type);
         
         try {
             System.debug('recordId: ' + recordId);
+            System.debug('recordTypeId: ' + recordTypeId);
             System.debug('linkToObject: ' + linkToObject);
             System.debug('linkToObjectFieldName: ' + linkToObjectFieldName);
             System.debug('linkToObjectProductFieldName: ' + linkToObjectProductFieldName);
@@ -185,6 +189,7 @@ public with sharing class ProductQuilt_Controller {
                         newRow.put('Id', linkedRowId);
                     }
 
+                    newRow.put('RecordTypeId', recordTypeId);
                     newRow.put(linkToObjectProductFieldName, productId);
 
                     if(hasInputTypes) {
@@ -228,12 +233,14 @@ public with sharing class ProductQuilt_Controller {
                 if (rows.size() > 0) {
                     try {
                         upsert rows;
+                        result.put('status','SUCCESS');
                     } catch (DmlException ex) {
                         System.debug('[linkProducts] DmlException : ' + ex.getMessage());
+                        result.put('status', 'ERROR');
+                        result.put('message', ex.getMessage());
                     }
                 }
 
-                result.put('status','SUCCESS');
                 result.put('rows', rows);
             }
         } catch (Exception ex) {

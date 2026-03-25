@@ -287,6 +287,7 @@ export default class ProductQuilt extends LightningElement {
 
     renderedCallback() {
         console.log('[renderedCallback] linkedRows', this.linkedRows);
+        console.log('[renderedCallback] brands', this.brands);
         this.linkedRows.forEach((value, key, map) => {
             Array.from(
                 this.template.querySelectorAll("c-selectable-tile."+key)
@@ -372,7 +373,7 @@ export default class ProductQuilt extends LightningElement {
                             prod.price = p.Wholesale_Price__c || 0;
                         }
 
-                        if (p.Brand__c != undefined && !brands.has(p.Brand__c)) {
+                        if (p.Brand__c != undefined && !brands.has(p.Brand__c)) {                            console.log('[loadProducts] brand ' + p.Brand__r.Name + ' not in list adding to map');
                             brands.set(p.Brand__c, { label: p.Brand__r.Name, value: p.Brand__c, Name: p.Brand__r.Name, Primary_Logo__c: p.Brand__r.Primary_Logo__c });
                         }
                         if (p.Unit_Size__c != undefined && !unitSizes.has(p.Unit_Size__c)) {
@@ -395,12 +396,16 @@ export default class ProductQuilt extends LightningElement {
                 //this.allProducts = [...productList];
                 this.products = [...productList];
                 console.log('[loadProducts] products', this.products.length, this.products);
+                this.brands = [...brands.values()];
+                /*
                 this.brands = [...brands.values()].sort((a,b) => {
                     if (a.label < b.label) { return -1; }
                     if (a.label > b.label) { return 1; }
                     return 0;
                 });
-                console.log('[loadProducts] brands', this.brands.length, this.brands);
+                */
+                console.log('[loadProducts] brands map', brands);
+                console.log('[loadProducts] brand list', this.brands.length, this.brands);
                 this.unitSizeOptions = [...unitSizes.values()].sort((a,b) => {
                     if (a.label < b.label) { return -1; }
                     if (a.label > b.label) { return 1; }
@@ -653,7 +658,8 @@ export default class ProductQuilt extends LightningElement {
         console.log('[linkProducts] selectedProducts', this.selectedProducts);
         this.isWorking = true;
         linkProducts({ recordId: this.recordId, 
-                linkToObject: this.linkToObject, 
+                recordTypeId: this.linkToObjectRecordTypeId,
+                linkToObject: this.linkToObject,                 
                 linkToObjectFieldName: this.linkToObjectFieldName, 
                 linkToObjectProductFieldName: this.linkToObjectProductFieldName,
                 linkToInputFieldName1: this.inputField1Name,

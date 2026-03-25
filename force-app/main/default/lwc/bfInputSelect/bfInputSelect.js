@@ -45,9 +45,9 @@ export default class bfInputSelect extends LightningElement {
 
     @wire(getPicklistValues, { recordTypeId: '$recordTypeId' , fieldApiName: '$fieldApiName' })
     picklistResults({ error, data }) {
-        console.log('[bfInputSelect.getPicklistValues] objectApiName, fieldName, recordTypeId  ', this.objectApiName, this.fieldName, this.recordTypeId);
-        console.log('[bfInputSelect.getPicklistValues] data', data);
-        console.log('[bfInputSelect.getPicklistValues] error', error);
+        //console.log('[bfInputSelect.getPicklistValues] objectApiName, fieldName, recordTypeId  ', this.objectApiName, this.fieldName, this.recordTypeId);
+        //console.log('[bfInputSelect.getPicklistValues] data', data);
+        //console.log('[bfInputSelect.getPicklistValues] error', error);
 
         if (data) {
             const picklistValues = data.values.map(d => {
@@ -67,7 +67,7 @@ export default class bfInputSelect extends LightningElement {
     }
 
     handleInputChange(event) {
-        console.log('[bfInputSelect.handleInputChange] value', event.detail.value);
+        //console.log('[bfInputSelect.handleInputChange] value', event.detail.value);
         try {
             this.fieldValue = event.detail.value;
             this.dispatchEvent(new CustomEvent('valueupdated', {
