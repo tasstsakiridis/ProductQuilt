@@ -59,7 +59,7 @@
                         </template>
                         <template if:true={hasSelectedRows}>
                             <lightning-button label={labels.removeProducts.label}
-                                            onclick={removeSelectedProducts}>
+                                            onclick={deleteProducts}>
                             </lightning-button>
                         </template>    
                     
@@ -112,6 +112,7 @@
                                                 columns={selectedProductsColumns}
                                                 data={selectedProducts}
                                                 column-widths-mode="auto"
+                                                onrowselection={handleProductRowSelection}
                                                 suppress-bottom-bar>
                             </lightning-datatable>
                         </div>

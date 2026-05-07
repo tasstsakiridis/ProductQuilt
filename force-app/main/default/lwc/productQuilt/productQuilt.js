@@ -247,7 +247,9 @@ export default class ProductQuilt extends LightningElement {
     totalPrice = 0;
 
     isDoneLoadingWire = false;
+    hasSelectedRows = false;
 
+    /*
     get hasSelectedRows() {
         const datatable = this.template.querySelector('lightning-datatable');
         if (datatable) {
@@ -256,6 +258,7 @@ export default class ProductQuilt extends LightningElement {
 
         return false;
     }
+    */
 
     filterConfigs = [
         { label: 'Show selected items', name: 'show_selected', type: 'boolean', value: 'false' },
@@ -530,7 +533,11 @@ export default class ProductQuilt extends LightningElement {
             console.log('[handleProductNameFilterChange] exception', ex);
         }
     }
-
+    handleProductRowSelection(event) {
+        const selectedRows = event.detail.selectedRows;
+        console.log('# of selected rows: ', selectedRows.length);
+        this.hasSelectedRows = selectedRows.length > 0;
+    }
     handleProductSelected(event) {
         console.log('[productQuilt.handleProductSelected] id, name, field1Name, field1Value, field2Name, field2Value', event.detail.id, event.detail.name, event.detail.field1Name, event.detail.field1Value, event.detail.field2Name, event.detail.field2Value);
         if (this.linkedRows.has(event.detail.id)) {
@@ -608,10 +615,6 @@ export default class ProductQuilt extends LightningElement {
                         tile.deselect();
                     });    
         
-                    const linkedRow = self.linkedRows.get(row.product);
-                    if (this.linkedRows != null && linkedRow.id != null && linkedRow.id != '') {
-                        this.rowsToDelete.push(linkedRow.id);
-                    }
                     self.linkedRows.delete(row.product);
                     
                     if(this.canCalculateTotals) {
@@ -622,35 +625,65 @@ export default class ProductQuilt extends LightningElement {
     
 
             this.selectedProducts = [...this.linkedRows.values()];
-            if (this.rowsToDelete && this.rowsToDelete.length > 0) {
-                this.deleteProducts();
-            }
         }catch(ex) {
             console.log('[productQuilt.removeSelectedProducts] exception', ex);
         }
     }
     clearSelectedProducts() {
         this.selectedProductRows = [...this.selectedProducts];
-        this.removeSelectedProducts();
+        this.deleteProducts();
     }
     deleteProducts() {
-        deleteLinkedProducts({
-            linkToObject: this.linkToObject,
-            productsToDelete: this.rowsToDelete
-        }).then(result => {
-            this.rowsToDelete = [];
-            this.isWorking = false;
-            const evt = new ShowToastEvent({
-                title: LABEL_SUCCESS,
-                message: result.message,
-                variant: 'success'
-            });
-            this.dispatchEvent(evt);
+        const self = this;
+        try {
+            const datatable = this.template.querySelector('lightning-datatable');
+            if (datatable) {
+                const selectedRows = datatable.getSelectedRows();
+                selectedRows.forEach(row => {
+                    const linkedRow = self.linkedRows.get(row.product);
+                    if (self.linkedRows != null && linkedRow.id != null && linkedRow.id != '') {
+                        self.rowsToDelete.push(linkedRow.id);
+                    }
+                });
+            }    
+        }catch(ex) {
+            console.log('[productQuilt.deleteProducts] exception', ex.message);
+        }
 
-        }).catch(error => {
-            console.log('[productQuilt.removeSelectedProducts] error', error);
-            this.isWorking = false;
-        });    
+        console.log('[deleteProducts] # of products to delete', this.rowsToDelete.length);
+        if (this.rowsToDelete.length > 0) {
+            deleteLinkedProducts({
+                linkToObject: this.linkToObject,
+                productsToDelete: this.rowsToDelete
+            }).then(result => {
+                console.log('[deleteLinkedProducts] result', result);
+                this.rowsToDelete = [];
+                this.isWorking = false;
+                if (result.status == 'ERROR') {
+                    throw new Error(result.message);
+                }
+
+                const evt = new ShowToastEvent({
+                    title: LABEL_SUCCESS,
+                    message: result.message,
+                    variant: 'success'
+                });
+                this.dispatchEvent(evt);
+
+                this.removeSelectedProducts();
+
+            }).catch(error => {
+                console.log('[productQuilt.deleteProducts] error', error);
+                const evt = new ShowToastEvent({
+                    title: LABEL_ERROR,
+                    message: error.message,
+                    variant: 'error'
+                });
+                this.dispatchEvent(evt);
+                this.isWorking = false;
+            });    
+            
+        }
     }
 
     linkSelectedProducts() {
@@ -669,18 +702,23 @@ export default class ProductQuilt extends LightningElement {
                 selectedProducts: this.selectedProducts,
         }).then(result => {
             console.log('[linkProducts] result', JSON.parse(JSON.stringify(result)));
+            if (result.status == 'ERROR') {
+                throw new Error(result.message);
+            }
+
             result.rows.forEach(r => {
                 let lr = {...this.linkedRows.get(r[this.linkToObjectProductFieldName])};
                 lr.id = r.Id;                
                 this.linkedRows.set(r[this.linkToObjectProductFieldName], lr);
             });
-            this.isWorking = false;
             const evt = new ShowToastEvent({
                 title: LABEL_SUCCESS,
                 message: 'Updates saved successfully',
                 variant: 'success'
             });
             this.dispatchEvent(evt);
+            this.isWorking = false;
+
 
         }).catch(error => {
             console.log('[ProductQuilt.linkSelectedProducts] exception]',JSON.parse(JSON.stringify(error)));
